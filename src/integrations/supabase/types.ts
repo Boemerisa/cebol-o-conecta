@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          address: Json
+          cash_for: number | null
+          change_amount: number | null
+          checked: string[]
+          created_at: string
+          customer_phone: string
+          delivery_fee: number
+          id: string
+          items: Json
+          number: number
+          payment_method: string
+          source: string
+          status: string
+          subtotal: number
+          total: number
+        }
+        Insert: {
+          address?: Json
+          cash_for?: number | null
+          change_amount?: number | null
+          checked?: string[]
+          created_at?: string
+          customer_phone?: string
+          delivery_fee?: number
+          id?: string
+          items?: Json
+          number?: number
+          payment_method?: string
+          source?: string
+          status?: string
+          subtotal?: number
+          total?: number
+        }
+        Update: {
+          address?: Json
+          cash_for?: number | null
+          change_amount?: number | null
+          checked?: string[]
+          created_at?: string
+          customer_phone?: string
+          delivery_fee?: number
+          id?: string
+          items?: Json
+          number?: number
+          payment_method?: string
+          source?: string
+          status?: string
+          subtotal?: number
+          total?: number
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          available: boolean
+          category: string
+          created_at: string
+          id: string
+          name: string
+          price: number
+          unit: string
+        }
+        Insert: {
+          available?: boolean
+          category: string
+          created_at?: string
+          id?: string
+          name: string
+          price?: number
+          unit?: string
+        }
+        Update: {
+          available?: boolean
+          category?: string
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          unit?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
