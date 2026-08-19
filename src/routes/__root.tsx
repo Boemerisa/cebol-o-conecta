@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
+import { MessageCircle, ShoppingBasket, Tags } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -77,14 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Cebolão Empório e Verdurão" },
+      {
+        name: "description",
+        content: "Pedidos pelo WhatsApp, comanda digital e controle de troco para a mercearia.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -119,8 +120,35 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-20 border-b border-border bg-[image:var(--gradient-fresh)] px-4 py-3 text-primary-foreground shadow-[var(--shadow-soft)]">
+          <p className="text-lg font-extrabold leading-tight">🧅 Cebolão</p>
+          <p className="text-xs opacity-90">Empório e Verdurão de bairro</p>
+        </header>
+        <main className="mx-auto w-full max-w-6xl px-4 py-5">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+        <nav className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-border bg-card">
+          {[
+            { to: "/", label: "Pedidos", Icon: ShoppingBasket },
+            { to: "/simulador", label: "WhatsApp", Icon: MessageCircle },
+            { to: "/catalogo", label: "Preços", Icon: Tags },
+          ].map(({ to, label, Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              activeOptions={{ exact: to === "/" }}
+              className="flex flex-col items-center gap-1 py-3 text-xs font-semibold text-muted-foreground"
+              activeProps={{ className: "text-primary-strong bg-primary/10" }}
+            >
+              <Icon className="size-6" aria-hidden />
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <Toaster />
+      </div>
     </QueryClientProvider>
   );
 }
