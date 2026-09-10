@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PIX_KEY, STORE_NAME } from "@/lib/catalog";
 import { brl, qtyLabel } from "@/lib/format";
-import { toggleChecked } from "@/lib/store";
 import type { Order } from "@/lib/types";
 
 const PAYMENT_LABEL: Record<Order["payment"]["method"], string> = {
@@ -41,7 +40,13 @@ export function PaymentBanner({ order }: { order: Order }) {
   );
 }
 
-export function OrderTicket({ order }: { order: Order }) {
+export function OrderTicket({
+  order,
+  onToggleItem,
+}: {
+  order: Order;
+  onToggleItem: (itemName: string) => void;
+}) {
   return (
     <div className="space-y-4">
       <div className="no-print space-y-4">
@@ -53,7 +58,7 @@ export function OrderTicket({ order }: { order: Order }) {
                 <Checkbox
                   id={`${order.id}-${item.name}`}
                   checked={order.checked.includes(item.name)}
-                  onCheckedChange={() => toggleChecked(order.id, item.name)}
+                  onCheckedChange={() => onToggleItem(item.name)}
                   className="size-6"
                 />
                 <label
