@@ -1,12 +1,14 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Bell, ChevronRight, ClipboardList, PackageCheck, Truck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { OrderTicket, PaymentBanner } from "@/components/order-ticket";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ORDERS_KEY, fetchOrders, updateChecked, updateOrderStatus } from "@/lib/data";
 import { brl, qtyLabel } from "@/lib/format";
-import { setOrderStatus, useStore } from "@/lib/store";
 import type { Order, OrderStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
@@ -21,7 +23,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Painel de Pedidos | Cebolão Empório e Verdurão" },
       {
         property: "og:description",
-        content: "Pedidos do WhatsApp organizados por status, com comanda para impressão térmica.",
+        content: "Pedidos organizados por status, com comanda para impressão térmica.",
       },
     ],
   }),
@@ -43,15 +45,36 @@ const ICONS = {
 } as const;
 
 function Painel() {
-  const orders = useStore((s) => s.orders);
-  const [open, setOpen] = useState<Order | null>(null);
-  const previousNew = useRef(0);
+  const queryClient = useQueryClient();
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ORDERS_KEY,
+    queryFn: fetchOrders,
+    refetchInterval: 15000,
+  });
+
+  const [openId, setOpenId] = useState<string | null>(null);
+  const previousNew = useRef<number | null>(null);
   const [alert, setAlert] = useState(false);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
+      updateOrderStatus(id, status),
+    onSuccess: invalidate,
+    onError: () => toast.error("Não deu para salvar. Tente de novo."),
+  });
+
+  const checkMutation = useMutation({
+    mutationFn: ({ id, checked }: { id: string; checked: string[] }) => updateChecked(id, checked),
+    onSuccess: invalidate,
+    onError: () => toast.error("Não deu para salvar a marcação."),
+  });
 
   const newCount = orders.filter((o) => o.status === "novo").length;
 
   useEffect(() => {
-    if (newCount > previousNew.current) {
+    if (previousNew.current != null && newCount > previousNew.current) {
       setAlert(true);
       try {
         const ctx = new AudioContext();
@@ -73,7 +96,7 @@ function Painel() {
     return;
   }, [newCount]);
 
-  const current = open ? (orders.find((o) => o.id === open.id) ?? null) : null;
+  const current: Order | null = openId ? (orders.find((o) => o.id === openId) ?? null) : null;
 
   return (
     <div className="space-y-5 pb-24">
@@ -86,16 +109,15 @@ function Painel() {
 
       {alert ? (
         <div className="animate-pulse rounded-xl border-2 border-primary bg-primary/15 p-4 text-base font-bold text-primary-strong">
-          🔔 Chegou pedido novo no WhatsApp!
+          🔔 Chegou um pedido novo!
         </div>
       ) : null}
 
-      {orders.length === 0 ? (
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Carregando pedidos…</p>
+      ) : orders.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
           <p className="text-base font-semibold">Nenhum pedido ainda</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use a aba Simulador para criar um pedido de teste.
-          </p>
         </div>
       ) : null}
 
@@ -140,14 +162,16 @@ function Painel() {
                     <PaymentBanner order={order} />
                   </div>
                   <div className="mt-3 flex flex-col gap-2">
-                    <Button variant="soft" size="xl" onClick={() => setOpen(order)}>
+                    <Button variant="soft" size="xl" onClick={() => setOpenId(order.id)}>
                       Abrir comanda <ChevronRight aria-hidden />
                     </Button>
                     {column.next ? (
                       <Button
                         variant="hero"
                         size="xl"
-                        onClick={() => setOrderStatus(order.id, column.next!)}
+                        onClick={() =>
+                          statusMutation.mutate({ id: order.id, status: column.next! })
+                        }
                       >
                         {column.nextLabel}
                       </Button>
@@ -160,12 +184,24 @@ function Painel() {
         })}
       </div>
 
-      <Dialog open={current != null} onOpenChange={(value) => !value && setOpen(null)}>
+      <Dialog open={current != null} onOpenChange={(value) => !value && setOpenId(null)}>
         <DialogContent className="max-h-[92vh] max-w-lg overflow-y-auto">
           <DialogHeader className="no-print">
             <DialogTitle className="text-2xl">Comanda {current?.number}</DialogTitle>
           </DialogHeader>
-          {current ? <OrderTicket order={current} /> : null}
+          {current ? (
+            <OrderTicket
+              order={current}
+              onToggleItem={(itemName) =>
+                checkMutation.mutate({
+                  id: current.id,
+                  checked: current.checked.includes(itemName)
+                    ? current.checked.filter((name) => name !== itemName)
+                    : [...current.checked, itemName],
+                })
+              }
+            />
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

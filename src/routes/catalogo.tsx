@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -7,8 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CATEGORIES } from "@/lib/catalog";
+import {
+  PRODUCTS_KEY,
+  createProduct,
+  deleteProduct,
+  fetchProducts,
+  updateProduct,
+} from "@/lib/data";
 import { brl } from "@/lib/format";
-import { addProduct, removeProduct, updateProduct, useStore } from "@/lib/store";
 import type { Category, Unit } from "@/lib/types";
 
 export const Route = createFileRoute("/catalogo")({
@@ -37,11 +44,43 @@ const UNITS: { value: Unit; label: string }[] = [
 ];
 
 function CatalogoPage() {
-  const products = useStore((s) => s.products);
+  const queryClient = useQueryClient();
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: PRODUCTS_KEY,
+    queryFn: fetchProducts,
+  });
+
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [unit, setUnit] = useState<Unit>("kg");
   const [category, setCategory] = useState<Category>("Hortifruti");
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY });
+  const fail = () => toast.error("Não deu para salvar. Tente de novo.");
+
+  const addMutation = useMutation({
+    mutationFn: createProduct,
+    onSuccess: () => {
+      invalidate();
+      toast.success("Produto adicionado ao catálogo");
+      setName("");
+      setPrice("");
+    },
+    onError: fail,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: { price?: number; available?: boolean } }) =>
+      updateProduct(id, patch),
+    onSuccess: invalidate,
+    onError: fail,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: invalidate,
+    onError: fail,
+  });
 
   function create() {
     const value = parseFloat(price.replace(",", "."));
@@ -49,10 +88,7 @@ function CatalogoPage() {
       toast.error("Escreva o nome e o preço do produto.");
       return;
     }
-    addProduct({ name: name.trim(), price: value, unit, category, available: true });
-    toast.success(`${name.trim()} adicionado ao catálogo`);
-    setName("");
-    setPrice("");
+    addMutation.mutate({ name: name.trim(), price: value, unit, category });
   }
 
   return (
@@ -60,7 +96,7 @@ function CatalogoPage() {
       <header className="space-y-1">
         <h1 className="text-2xl font-extrabold">Catálogo e preços</h1>
         <p className="text-sm text-muted-foreground">
-          Toque em <strong>Esgotado</strong> quando acabar — o assistente para de vender na hora.
+          Toque em <strong>Esgotado</strong> quando o produto acabar.
         </p>
       </header>
 
@@ -116,6 +152,8 @@ function CatalogoPage() {
         </Button>
       </section>
 
+      {isLoading ? <p className="text-sm text-muted-foreground">Carregando produtos…</p> : null}
+
       {CATEGORIES.map((cat) => {
         const list = products.filter((p) => p.category === cat);
         if (list.length === 0) return null;
@@ -143,13 +181,20 @@ function CatalogoPage() {
                   className="h-12 w-24"
                   onBlur={(event) => {
                     const value = parseFloat(event.target.value.replace(",", "."));
-                    if (value) updateProduct(product.id, { price: value });
+                    if (value && value !== product.price) {
+                      updateMutation.mutate({ id: product.id, patch: { price: value } });
+                    }
                   }}
                 />
                 <Button
                   variant={product.available ? "hero" : "destructive"}
                   size="xl"
-                  onClick={() => updateProduct(product.id, { available: !product.available })}
+                  onClick={() =>
+                    updateMutation.mutate({
+                      id: product.id,
+                      patch: { available: !product.available },
+                    })
+                  }
                 >
                   {product.available ? "Disponível" : "Esgotado"}
                 </Button>
@@ -157,7 +202,7 @@ function CatalogoPage() {
                   variant="ghost"
                   size="icon"
                   aria-label={`Remover ${product.name}`}
-                  onClick={() => removeProduct(product.id)}
+                  onClick={() => deleteMutation.mutate(product.id)}
                 >
                   <Trash2 aria-hidden />
                 </Button>
