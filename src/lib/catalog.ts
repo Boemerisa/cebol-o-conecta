@@ -47,3 +47,6 @@ export const NEIGHBORHOODS: { name: string; fee: number }[] = [
 export const PIX_KEY = "cebolao@emporio.com.br";
 
 export const STORE_NAME = "Cebolão Empório e Verdurão";
+
+/** Senha simples de 4 números para abrir o painel da loja. */
+export const STORE_PIN = "1234";
