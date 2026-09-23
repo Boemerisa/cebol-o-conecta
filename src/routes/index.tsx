@@ -79,6 +79,7 @@ function Painel() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [supportOpen, setSupportOpen] = useState(false);
   const previousNew = useRef<number | null>(null);
+  const previousSupportCount = useRef<number | null>(null);
   const [alert, setAlert] = useState(false);
 
   const invalidateOrders = () => queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
@@ -137,6 +138,7 @@ function Painel() {
 
   const newCount = orders.filter((o) => o.status === "novo").length;
 
+  // Alerta sonoro e visual para novos PEDIDOS (880 Hz)
   useEffect(() => {
     if (previousNew.current != null && newCount > previousNew.current) {
       setAlert(true);
@@ -159,6 +161,26 @@ function Painel() {
     previousNew.current = newCount;
     return;
   }, [newCount]);
+
+  // Alerta sonoro para novas CONVERSAS PENDENTES (660 Hz — tom diferente do pedido)
+  useEffect(() => {
+    const count = supportRequests.length;
+    if (previousSupportCount.current != null && count > previousSupportCount.current) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 660;
+        gain.gain.value = 0.08;
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch {
+        /* som opcional */
+      }
+    }
+    previousSupportCount.current = count;
+  }, [supportRequests.length]);
 
   const current: Order | null = openId ? (orders.find((o) => o.id === openId) ?? null) : null;
 

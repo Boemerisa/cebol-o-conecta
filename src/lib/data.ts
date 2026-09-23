@@ -225,19 +225,25 @@ export async function createOrderFromBot(input: {
   return `#${String(row.number).padStart(3, "0")}`;
 }
 
-export async function createSupportRequest(customerPhone: string): Promise<void> {
+export async function createSupportRequest(
+  customerPhone: string,
+  message?: string,
+): Promise<void> {
   const { error } = await db.from("support_requests").insert({
     customer_phone: customerPhone,
-    message: "Cliente solicitou atendimento humano",
+    message: message ?? "Cliente solicitou atendimento humano",
+    handled: false,
   });
   if (error) throw error;
 }
 
 export async function fetchSupportRequests(): Promise<SupportRequest[]> {
+  // Filtra registros não atendidos. Usa .or() para capturar rows onde handled
+  // seja false OU null (caso o DEFAULT não tenha sido aplicado pela RLS).
   const { data, error } = await db
     .from("support_requests")
     .select("id, customer_phone, message, created_at")
-    .eq("handled", false)
+    .or("handled.eq.false,handled.is.null")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data as { id: string; customer_phone: string; message: string; created_at: string }[]).map(

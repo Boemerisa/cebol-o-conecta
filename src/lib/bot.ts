@@ -151,9 +151,12 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
     replies,
   });
 
-  // Comando de reinício universal
+  // Comando de reinício / voltar ao menu principal (universal)
   if (
     n === "reiniciar" ||
+    n === "voltar" ||
+    n === "voltar ao menu" ||
+    n === "menu principal" ||
     n === "reiniciar conversa" ||
     n === "novo teste" ||
     n === "comecar de novo" ||
@@ -169,7 +172,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
     case "human":
       return keep([
         {
-          text: "Já avisamos a dona da loja! Ela vai te responder por aqui em instantes. 🙏 Se quiser reiniciar o assistente, digite 'reiniciar'.",
+          text: "Sua mensagem foi recebida e será respondida em breve. 🙏 Se quiser voltar ao menu principal, digite 'voltar'.",
         },
       ]);
 
@@ -186,7 +189,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...initialBotState(), step: "human" },
           replies: [
             {
-              text: "Tudo bem! Já chamei a dona da loja aqui no balcão. Ela vai te responder em instantes. 😊",
+              text: "Tudo bem! O responsável irá atendê-lo em instantes. 😊",
             },
           ],
           action: "human",

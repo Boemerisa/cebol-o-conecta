@@ -93,7 +93,8 @@ function SimuladorPage() {
   }, [messages, typing]);
 
   const supportMutation = useMutation({
-    mutationFn: () => createSupportRequest(CLIENT_PHONE),
+    mutationFn: (clientMessage: string) =>
+      createSupportRequest(CLIENT_PHONE, clientMessage),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SUPPORT_KEY });
       toast.info("Aviso enviado ao painel da loja: cliente na lista 'Conversas Pendentes'.", {
@@ -181,7 +182,7 @@ function SimuladorPage() {
       pushBotReplies(result.replies);
 
       if (result.action === "human") {
-        supportMutation.mutate();
+        supportMutation.mutate(clean);
       }
       if (result.action === "create_order") {
         orderMutation.mutate(result.state);
