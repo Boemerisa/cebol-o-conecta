@@ -140,3 +140,101 @@ export async function updateChecked(id: string, checked: string[]): Promise<void
   const { error } = await supabase.from("orders").update({ checked }).eq("id", id);
   if (error) throw error;
 }
+
+// ---------------------------------------------------------------------------
+// Assistente do WhatsApp: gravação de pedidos e avisos de atendimento humano
+// ---------------------------------------------------------------------------
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const db = supabase as any;
+
+export const SUPPORT_KEY = ["support-requests"] as const;
+
+export interface SupportRequest {
+  id: string;
+  customerPhone: string;
+  message: string;
+  createdAt: string;
+}
+
+export async function createOrderFromBot(input: {
+  customerPhone: string;
+  items: Order["items"];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  payment: { method: PaymentMethod; cashFor?: number | null };
+  address: Address;
+  source: string;
+}): Promise<string> {
+  const cashFor = input.payment.cashFor ?? null;
+  const change =
+    input.payment.method === "cash" && cashFor != null
+      ? Math.round((cashFor - input.total) * 100) / 100
+      : null;
+
+  const { data, error } = await db
+    .from("orders")
+    .insert({
+      customer_phone: input.customerPhone,
+      items: input.items,
+      subtotal: input.subtotal,
+      delivery_fee: input.deliveryFee,
+      total: input.total,
+      payment_method: input.payment.method,
+      cash_for: cashFor,
+      change_amount: change,
+      address: input.address,
+      status: "novo",
+      source: input.source,
+    })
+    .select("id, number")
+    .single();
+  if (error) throw error;
+
+  const row = data as { id: string; number: number };
+  const { error: itemsError } = await db.from("order_items").insert(
+    input.items.map((item) => ({
+      order_id: row.id,
+      product_id: item.productId,
+      name: item.name,
+      qty: item.qty,
+      unit: item.unit,
+      unit_price: item.unitPrice,
+      total: item.total,
+    })),
+  );
+  if (itemsError) throw itemsError;
+
+  return `#${String(row.number).padStart(3, "0")}`;
+}
+
+export async function createSupportRequest(customerPhone: string): Promise<void> {
+  const { error } = await db.from("support_requests").insert({
+    customer_phone: customerPhone,
+    message: "Cliente solicitou atendimento humano",
+  });
+  if (error) throw error;
+}
+
+export async function fetchSupportRequests(): Promise<SupportRequest[]> {
+  const { data, error } = await db
+    .from("support_requests")
+    .select("id, customer_phone, message, created_at")
+    .eq("handled", false)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as { id: string; customer_phone: string; message: string; created_at: string }[]).map(
+    (row) => ({
+      id: row.id,
+      customerPhone: row.customer_phone,
+      message: row.message,
+      createdAt: row.created_at,
+    }),
+  );
+}
+
+export async function resolveSupportRequest(id: string): Promise<void> {
+  const { error } = await db.from("support_requests").update({ handled: true }).eq("id", id);
+  if (error) throw error;
+}
