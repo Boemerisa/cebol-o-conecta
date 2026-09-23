@@ -169,12 +169,21 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
   }
 
   switch (state.step) {
-    case "human":
-      return keep([
-        {
-          text: "Sua mensagem foi recebida e serÃ¡ respondida em breve. ğŸ™ Se quiser voltar ao menu principal, digite 'voltar'.",
-        },
-      ]);
+    case "human": {
+      if (n === "voltar" || n === "reiniciar" || n === "menu") {
+        return {
+          state: initialBotState(),
+          replies: [{ text: "Voltamos ao início! Como posso te ajudar hoje?", buttons: WELCOME_BUTTONS }],
+        };
+      }
+      return {
+        state,
+        replies: [
+          { text: "Sua mensagem foi recebida e será respondida em breve. ?? Se quiser voltar ao menu principal, digite 'voltar'." },
+        ],
+        action: "human",
+      };
+    }
 
     case "start":
     case "done": {
