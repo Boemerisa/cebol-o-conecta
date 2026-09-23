@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
-import { ShoppingBasket, Tags } from "lucide-react";
+import { MessageSquareText, ShoppingBasket, Tags } from "lucide-react";
 
 import { PinGate } from "@/components/pin-gate";
 
@@ -132,10 +132,11 @@ function RootComponent() {
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />
           </main>
-          <nav className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-2 border-t border-border bg-card">
+          <nav className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-border bg-card">
             {[
               { to: "/", label: "Pedidos", Icon: ShoppingBasket },
               { to: "/catalogo", label: "Preços", Icon: Tags },
+              { to: "/simulador", label: "Simulador WhatsApp", Icon: MessageSquareText },
             ].map(({ to, label, Icon }) => (
               <Link
                 key={to}
@@ -145,7 +146,7 @@ function RootComponent() {
                 activeProps={{ className: "text-primary-strong bg-primary/10" }}
               >
                 <Icon className="size-6" aria-hidden />
-                {label}
+                <span className="truncate px-1 text-center">{label}</span>
               </Link>
             ))}
           </nav>

@@ -1,36 +1,37 @@
-import { parseOrderText, sum } from "./parser";
+import { cleanUnknownName, extractRemoval, normalize, parseOrderText, sum } from "./parser";
 import { brl, qtyLabel } from "./format";
+import { PIX_KEY } from "./catalog";
 import type { Address, OrderItem, PaymentMethod, Product } from "./types";
 
-/** Taxa de entrega padrão da loja. */
+/** Taxa de entrega padrão da loja (R$ 5,00 fixa). */
 export const DELIVERY_FEE = 5;
 
 export const WELCOME_TEXT =
-  "Olá! Seja muito bem-vindo(a) ao Cebolão Empório e Verdurão! 🥬🧅 Como podemos te ajudar hoje?";
+  "Oi! 😊 Aqui é o Cebolão Empório e Verdurão — hortifruti fresquinho e mercearia com entrega no Setor Oeste e região. Como posso te ajudar hoje?";
 
 export const WELCOME_BUTTONS = ["Fazer pedido", "Falar com atendente"];
 
 export type BotStep =
   | "start"
   | "items"
-  | "items_confirm"
-  | "name"
-  | "street"
-  | "number"
-  | "neighborhood"
-  | "reference"
+  | "unknown_item_prompt"
+  | "review"
+  | "address"
+  | "receiver_name"
   | "payment"
-  | "cash"
-  | "confirm"
+  | "cash_change"
+  | "confirm_final"
   | "done"
   | "human";
 
 export interface BotState {
   step: BotStep;
   items: OrderItem[];
+  unknownItems?: string[];
   address: Address;
   payment: PaymentMethod | null;
   cashFor: number | null;
+  change: number | null;
 }
 
 export interface BotReply {
@@ -41,7 +42,7 @@ export interface BotReply {
 export interface BotResult {
   state: BotState;
   replies: BotReply[];
-  /** Ação que o app precisa executar depois de responder. */
+  /** Ação que o app ou webhook precisa executar. */
   action?: "create_order" | "human";
 }
 
@@ -49,6 +50,7 @@ export function initialBotState(): BotState {
   return {
     step: "start",
     items: [],
+    unknownItems: [],
     address: {
       street: "",
       number: "",
@@ -59,15 +61,9 @@ export function initialBotState(): BotState {
     },
     payment: null,
     cashFor: null,
+    change: null,
   };
 }
-
-const normalize = (text: string): string =>
-  text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
 
 export function subtotalOf(state: BotState): number {
   return sum(state.items);
@@ -79,23 +75,17 @@ export function totalOf(state: BotState): number {
 
 const PAYMENT_BUTTONS = ["Pix", "Cartão na entrega", "Dinheiro"];
 
-const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  pix: "Pix",
-  card: "Cartão na entrega",
-  cash: "Dinheiro",
-};
-
-function itemsText(state: BotState): string {
+export function itemsListText(state: BotState): string {
   const lines = state.items.map(
-    (item) => `• ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
+    (item, index) => `${index + 1}. ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   );
   return [
-    "Anotei assim:",
+    "*Itens identificados:*",
     ...lines,
     "",
     `Subtotal: ${brl(subtotalOf(state))}`,
     `Taxa de entrega: ${brl(DELIVERY_FEE)}`,
-    `Total: ${brl(totalOf(state))}`,
+    `*Total parcial: ${brl(totalOf(state))}*`,
   ].join("\n");
 }
 
@@ -103,26 +93,33 @@ export function summaryText(state: BotState, orderNumber?: string): string {
   const lines = state.items.map(
     (item) => `• ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   );
-  const payment = state.payment ? PAYMENT_LABEL[state.payment] : "-";
-  const troco =
-    state.payment === "cash" && state.cashFor
-      ? `\nTroco para ${brl(state.cashFor)}: ${brl(Math.round((state.cashFor - totalOf(state)) * 100) / 100)}`
-      : "";
+  const payment =
+    state.payment === "pix"
+      ? "Pix"
+      : state.payment === "card"
+        ? "Cartão na entrega (motoboy leva maquininha)"
+        : "Dinheiro";
+
+  const trocoText =
+    state.payment === "cash" && state.cashFor && state.cashFor > totalOf(state)
+      ? `\n  💵 Troco de ${brl(state.change ?? Math.round((state.cashFor - totalOf(state)) * 100) / 100)} para ${brl(state.cashFor)}`
+      : state.payment === "cash"
+        ? "\n  💵 Pagamento exato (sem troco)"
+        : "";
+
   return [
-    orderNumber ? `*Pedido ${orderNumber} confirmado!*` : "*Confira seu pedido*",
+    orderNumber ? `🎉 *Pedido ${orderNumber} confirmado com sucesso!*` : "📋 *Resumo do Pedido*",
+    "",
     ...lines,
     "",
     `Subtotal: ${brl(subtotalOf(state))}`,
-    `Entrega: ${brl(DELIVERY_FEE)}`,
+    `Taxa de entrega: ${brl(DELIVERY_FEE)}`,
     `*Total: ${brl(totalOf(state))}*`,
-    `Pagamento: ${payment}${troco}`,
+    `Forma de pagamento: ${payment}${trocoText}`,
     "",
-    `Entrega para ${state.address.receiver}`,
-    `${state.address.street}, ${state.address.number} — ${state.address.neighborhood}`,
-    state.address.reference ? `Referência: ${state.address.reference}` : "",
-  ]
-    .filter((line) => line !== "")
-    .join("\n");
+    `📍 *Endereço:* ${state.address.street}`,
+    `👤 *Recebe:* ${state.address.receiver}`,
+  ].join("\n");
 }
 
 function alternatives(products: Product[], missing: string[]): string {
@@ -132,22 +129,35 @@ function alternatives(products: Product[], missing: string[]): string {
       const other = products.find(
         (p) => p.available && p.category === product.category && p.id !== product.id,
       );
-      return other ? `Em vez de ${product.name}, temos ${other.name} (${brl(other.price)}).` : null;
+      return other
+        ? `• Em vez de ${product.name}, temos ${other.name} (${brl(other.price)}/${other.unit}).`
+        : null;
     })
     .filter((line): line is string => line != null);
-  return suggestions.join("\n");
+
+  return suggestions.length
+    ? `Sugestões disponíveis hoje:\n${suggestions.join("\n")}`
+    : "No momento não temos substitutos diretos nessa categoria.";
 }
 
-/** Motor da conversa: recebe o texto (ou clique de botão) do cliente e devolve as respostas. */
+/** Motor da conversa: processa texto ou clique de botão e devolve as respostas do bot */
 export function advance(state: BotState, input: string, products: Product[]): BotResult {
   const text = input.trim();
   const n = normalize(text);
+
   const keep = (replies: BotReply[], step: BotStep = state.step): BotResult => ({
     state: { ...state, step },
     replies,
   });
 
-  if (n.includes("reiniciar") || n === "cancelar") {
+  // Comando de reinício universal
+  if (
+    n === "reiniciar" ||
+    n === "reiniciar conversa" ||
+    n === "novo teste" ||
+    n === "comecar de novo" ||
+    n === "cancelar pedido"
+  ) {
     return {
       state: initialBotState(),
       replies: [{ text: WELCOME_TEXT, buttons: WELCOME_BUTTONS }],
@@ -157,12 +167,20 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
   switch (state.step) {
     case "human":
       return keep([
-        { text: "Já avisamos a dona da loja, ela responde por aqui em instantes. 🙏" },
+        {
+          text: "Já avisamos a dona da loja! Ela vai te responder por aqui em instantes. 🙏 Se quiser reiniciar o assistente, digite 'reiniciar'.",
+        },
       ]);
 
     case "start":
     case "done": {
-      if (n.includes("atendente") || n.includes("humano")) {
+      // 1. Cliente escolhe falar com atendente humano
+      if (
+        n.includes("atendente") ||
+        n.includes("humano") ||
+        n.includes("falar com") ||
+        n.includes("dona")
+      ) {
         return {
           state: { ...initialBotState(), step: "human" },
           replies: [
@@ -173,194 +191,489 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           action: "human",
         };
       }
-      if (n.includes("pedido") || n.includes("comprar") || n.includes("sim")) {
+
+      // 2. Cliente escolhe fazer pedido
+      if (
+        n.includes("pedido") ||
+        n.includes("comprar") ||
+        n.includes("fazer pedido") ||
+        n.includes("quero comprar") ||
+        n.includes("sim") ||
+        n.includes("oi") ||
+        n.includes("ola")
+      ) {
         return {
           state: { ...initialBotState(), step: "items" },
           replies: [
             {
-              text: "Que bom! 😀 Me manda sua lista de compras em uma mensagem só.\nEx.: 1kg de tomate, 2 pés de alface, 1 óleo Liza e 500g de cebola",
+              text: "Que ótimo! 😀 Me mande a sua lista de compras em uma mensagem só.\n\nPor exemplo: *1kg de tomate, 500g de cebola, 2 pés de alface e 1 óleo Liza*",
             },
           ],
         };
       }
+
       return keep([{ text: WELCOME_TEXT, buttons: WELCOME_BUTTONS }], "start");
     }
 
     case "items": {
       const { items, unknown, unavailable } = parseOrderText(text, products);
-      if (items.length === 0) {
-        const soldOutMsg = unavailable.length
-          ? `Infelizmente ${unavailable.join(", ")} está esgotado hoje.\n${alternatives(products, unavailable)}`
-          : "";
+
+      // Cenário 1: Nenhum item foi reconhecido e temos itens desconhecidos
+      if (items.length === 0 && unknown.length > 0) {
+        const missingName = unknown[0];
         return keep([
           {
-            text:
-              (soldOutMsg ? soldOutMsg + "\n\n" : "") +
-              "Não consegui entender os itens. Pode escrever de novo com a quantidade e o produto? Ex.: 2kg de banana, 1 leite",
+            text: `Não temos '${missingName}' no momento 😕.\n\nQuer tentar outro produto do nosso catálogo? Me envie o que deseja comprar:`,
           },
         ]);
       }
-      const merged = { ...state, items };
+
+      // Cenário 2: Nada reconhecido e nenhuma palavra de produto
+      if (items.length === 0) {
+        const soldOutMsg = unavailable.length
+          ? `Infelizmente ${unavailable.join(", ")} está esgotado hoje.\n${alternatives(products, unavailable)}\n\n`
+          : "";
+        return keep([
+          {
+            text: `${soldOutMsg}Não consegui identificar os produtos na mensagem. Pode escrever a quantidade e o produto?\nExemplo: *2kg de batata, 1 leite e 500g de cebola*`,
+          },
+        ]);
+      }
+
+      const mergedState = { ...state, items };
       const replies: BotReply[] = [];
-      if (unavailable.length) {
+
+      // Avisa sobre produtos esgotados
+      if (unavailable.length > 0) {
         replies.push({
-          text: `Só um aviso: ${unavailable.join(", ")} está esgotado hoje.\n${alternatives(products, unavailable)}`,
+          text: `⚠️ *Aviso de estoque:* Infelizmente ${unavailable.join(", ")} está esgotado hoje.\n${alternatives(products, unavailable)}`,
         });
       }
-      if (unknown.length) {
+
+      // Se houver algum item não cadastrado junto com itens válidos:
+      if (unknown.length > 0) {
+        const missingName = unknown[0];
         replies.push({
-          text: `Não encontrei no nosso catálogo: ${unknown.join(", ")}. Se quiser, escreva de outra forma depois.`,
+          text: `Não temos '${missingName}' no momento 😕. Quer continuar o pedido sem esse item ou gostaria de adicionar outro no lugar?`,
+          buttons: [`Continuar sem ${missingName}`, "Adicionar outro item"],
         });
+        return {
+          state: {
+            ...mergedState,
+            unknownItems: unknown,
+            step: "unknown_item_prompt",
+          },
+          replies,
+        };
       }
+
+      // Todos os itens reconhecidos: vai para a revisão
       replies.push({
-        text: itemsText(merged),
-        buttons: ["Está certo", "Corrigir a lista"],
+        text: `${itemsListText(mergedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+        buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
       });
-      return { state: { ...merged, step: "items_confirm" }, replies };
+
+      return {
+        state: { ...mergedState, step: "review" },
+        replies,
+      };
     }
 
-    case "items_confirm": {
-      if (n.includes("corrigir") || n.includes("nao")) {
+    case "unknown_item_prompt": {
+      // Cliente quer continuar sem o item
+      if (
+        n.includes("continuar sem") ||
+        n.includes("continuar") ||
+        n.includes("seguir") ||
+        n.includes("sem ele") ||
+        n.includes("sem esse") ||
+        n.includes("pode ser sem")
+      ) {
         return {
-          state: { ...state, items: [], step: "items" },
-          replies: [{ text: "Sem problema! Me manda a lista novamente, por favor." }],
+          state: { ...state, step: "review", unknownItems: [] },
+          replies: [
+            {
+              text: `Combinado! Seguindo sem o item.\n\n${itemsListText(state)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+            },
+          ],
         };
       }
-      if (n.includes("certo") || n.includes("sim") || n.includes("ok")) {
-        return {
-          state: { ...state, step: "name" },
-          replies: [{ text: "Perfeito! Qual é o seu nome (quem vai receber o pedido)?" }],
-        };
+
+      // Cliente quer adicionar outro item no lugar
+      if (n.includes("adicionar outro") || n.includes("outro") || n.includes("substituir")) {
+        return keep([
+          {
+            text: "Pode me dizer qual produto você gostaria de colocar no lugar (ex: 'coloca 1kg de batata'):",
+          },
+        ]);
       }
+
+      // Cliente digitou diretamente o novo item
       const extra = parseOrderText(text, products);
-      if (extra.items.length) {
+      if (extra.items.length > 0) {
         const items = [...state.items];
         for (const item of extra.items) {
-          const existing = items.find((i) => i.name === item.name);
+          const existing = items.find((i) => i.productId === item.productId);
           if (existing) {
             existing.qty = Math.round((existing.qty + item.qty) * 1000) / 1000;
             existing.total = Math.round(existing.qty * existing.unitPrice * 100) / 100;
-          } else items.push(item);
+          } else {
+            items.push(item);
+          }
         }
-        const merged = { ...state, items };
+        const updatedState = { ...state, items, unknownItems: [], step: "review" as BotStep };
         return {
-          state: merged,
-          replies: [{ text: itemsText(merged), buttons: ["Está certo", "Corrigir a lista"] }],
+          state: updatedState,
+          replies: [
+            {
+              text: `Adicionei à lista! Veja como ficou:\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+            },
+          ],
         };
       }
+
       return keep([
-        { text: "Pode confirmar a lista?", buttons: ["Está certo", "Corrigir a lista"] },
+        {
+          text: "Quer continuar o pedido sem o produto que não temos ou gostaria de adicionar outro?",
+          buttons: ["Continuar sem esse item", "Adicionar outro item"],
+        },
       ]);
     }
 
-    case "name":
-      if (text.length < 2) return keep([{ text: "Como é o seu nome, por favor?" }]);
-      return {
-        state: { ...state, address: { ...state.address, receiver: text }, step: "street" },
-        replies: [{ text: `Obrigada, ${text}! Qual é a rua da entrega?` }],
-      };
+    case "review": {
+      // 1. Confirmação positiva: segue para coleta de endereço
+      if (
+        n === "esta certo! prosseguir" ||
+        n === "esta certo" ||
+        n === "prosseguir" ||
+        n === "sim" ||
+        n === "confere" ||
+        n === "tudo certo" ||
+        n === "pode prosseguir" ||
+        n === "ok" ||
+        n === "fechar" ||
+        n === "continuar"
+      ) {
+        return {
+          state: { ...state, step: "address" },
+          replies: [
+            {
+              text: "Perfeito! Agora vamos para o endereço de entrega.\n\nPor favor, digite o endereço de entrega em uma só linha (rua, número, bairro, complemento e ponto de referência, se tiver).",
+            },
+          ],
+        };
+      }
 
-    case "street":
-      if (text.length < 3) return keep([{ text: "Qual é o nome da rua?" }]);
-      return {
-        state: { ...state, address: { ...state.address, street: text }, step: "number" },
-        replies: [{ text: "E o número da casa ou apartamento?" }],
-      };
+      // 2. Remoção de item solicitada pelo cliente
+      const removal = extractRemoval(text, state.items);
+      if (removal.removed) {
+        const remaining = removal.remaining;
+        if (remaining.length === 0) {
+          return {
+            state: { ...state, items: [], step: "items" },
+            replies: [
+              {
+                text: `Removi ${removal.removed.name}. Sua lista agora está vazia. Pode me enviar uma nova lista de itens:`,
+              },
+            ],
+          };
+        }
+        const updatedState = { ...state, items: remaining };
+        return {
+          state: updatedState,
+          replies: [
+            {
+              text: `Removi *${removal.removed.name}* da lista! ✅\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+            },
+          ],
+        };
+      }
 
-    case "number":
-      if (text.length < 1) return keep([{ text: "Qual é o número?" }]);
-      return {
-        state: { ...state, address: { ...state.address, number: text }, step: "neighborhood" },
-        replies: [{ text: "Qual é o bairro?" }],
-      };
+      // 3. Adição ou acréscimo de mais produtos
+      const additions = parseOrderText(text, products);
+      if (additions.items.length > 0) {
+        const items = [...state.items];
+        for (const item of additions.items) {
+          const existing = items.find((i) => i.productId === item.productId);
+          if (existing) {
+            existing.qty = Math.round((existing.qty + item.qty) * 1000) / 1000;
+            existing.total = Math.round(existing.qty * existing.unitPrice * 100) / 100;
+          } else {
+            items.push(item);
+          }
+        }
+        const updatedState = { ...state, items };
+        const extraReplies: BotReply[] = [];
+        if (additions.unknown.length > 0) {
+          extraReplies.push({
+            text: `Aviso: não temos '${additions.unknown[0]}' no momento 😕.`,
+          });
+        }
+        extraReplies.push({
+          text: `Atualizei seu pedido! 🛒\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+          buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+        });
+        return {
+          state: updatedState,
+          replies: extraReplies,
+        };
+      }
 
-    case "neighborhood":
-      if (text.length < 2) return keep([{ text: "Qual é o bairro?" }]);
-      return {
-        state: { ...state, address: { ...state.address, neighborhood: text }, step: "reference" },
-        replies: [
-          { text: "Tem algum ponto de referência para o entregador achar mais fácil?" },
-        ],
-      };
+      if (n.includes("adicionar mais") || n.includes("adicionar")) {
+        return keep([
+          {
+            text: "Pode escrever o que deseja adicionar (ex: '1kg de batata e 1 óleo Liza'):",
+          },
+        ]);
+      }
 
-    case "reference":
-      return {
-        state: {
-          ...state,
-          address: { ...state.address, reference: n === "nao" ? "" : text },
-          step: "payment",
+      if (n.includes("corrigir") || n.includes("mudar")) {
+        return keep([
+          {
+            text: "O que você deseja mudar? Você pode me dizer para remover (ex: 'tirar tomate'), adicionar (ex: 'mais 1kg de cebola') ou mandar a lista completa novamente.",
+          },
+        ]);
+      }
+
+      return keep([
+        {
+          text: "Podemos prosseguir com esse pedido ou gostaria de ajustar algum item?",
+          buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
         },
+      ]);
+    }
+
+    case "address": {
+      if (text.length < 5) {
+        return keep([
+          {
+            text: "Por favor, digite o endereço completo em uma linha só (rua, número, bairro, complemento e ponto de referência, se tiver).",
+          },
+        ]);
+      }
+
+      // Aceita o texto corrido como está
+      const nextState: BotState = {
+        ...state,
+        address: {
+          ...state.address,
+          street: text,
+        },
+        step: "receiver_name",
+      };
+
+      return {
+        state: nextState,
         replies: [
           {
-            text: `Fechando: total de ${brl(totalOf(state))} (já com a entrega de ${brl(DELIVERY_FEE)}).\nComo você prefere pagar?`,
+            text: "Anotado! 📍\n\nE quem vai receber o pedido? Por favor, digite o seu nome.",
+          },
+        ],
+      };
+    }
+
+    case "receiver_name": {
+      if (text.length < 2) {
+        return keep([
+          {
+            text: "Como é o nome de quem vai receber, por favor?",
+          },
+        ]);
+      }
+
+      const nextState: BotState = {
+        ...state,
+        address: {
+          ...state.address,
+          receiver: text,
+        },
+        step: "payment",
+      };
+
+      return {
+        state: nextState,
+        replies: [
+          {
+            text: `Muito obrigado, ${text}! 😊\n\nSubtotal dos itens: ${brl(subtotalOf(state))}\nTaxa de entrega fixa: ${brl(DELIVERY_FEE)}\n*Total a pagar: ${brl(totalOf(state))}*\n\nComo você prefere fazer o pagamento?`,
             buttons: PAYMENT_BUTTONS,
           },
         ],
       };
-
-    case "payment": {
-      if (n.includes("pix")) {
-        const next = { ...state, payment: "pix" as PaymentMethod, step: "confirm" as BotStep };
-        return {
-          state: next,
-          replies: [
-            { text: summaryText(next), buttons: ["Confirmar pedido", "Cancelar"] },
-          ],
-        };
-      }
-      if (n.includes("cartao") || n.includes("credito") || n.includes("debito")) {
-        const next = { ...state, payment: "card" as PaymentMethod, step: "confirm" as BotStep };
-        return {
-          state: next,
-          replies: [
-            { text: "Combinado, o entregador leva a maquininha. 💳" },
-            { text: summaryText(next), buttons: ["Confirmar pedido", "Cancelar"] },
-          ],
-        };
-      }
-      if (n.includes("dinheiro") || n.includes("especie")) {
-        return {
-          state: { ...state, payment: "cash", step: "cash" },
-          replies: [{ text: "Precisa de troco para quanto?" }],
-        };
-      }
-      return keep([{ text: "Como você prefere pagar?", buttons: PAYMENT_BUTTONS }]);
     }
 
-    case "cash": {
-      const match = text.replace(/[^\d,.]/g, "").replace(",", ".");
-      const value = parseFloat(match);
-      const total = totalOf(state);
-      if (!value || Number.isNaN(value)) {
-        return keep([
-          { text: `Me diga o valor da nota, por exemplo 50. Seu total é ${brl(total)}.` },
-        ]);
+    case "payment": {
+      // 1. Pix
+      if (n.includes("pix")) {
+        const nextState: BotState = {
+          ...state,
+          payment: "pix",
+          cashFor: null,
+          change: null,
+          step: "confirm_final",
+        };
+        return {
+          state: nextState,
+          replies: [
+            {
+              text: `Chave Pix do Cebolão (Copia e Cola):\n\`${PIX_KEY}\`\n\nVocê pode efetuar a transferência e nos enviar o comprovante após a confirmação.`,
+            },
+            {
+              text: summaryText(nextState),
+              buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+            },
+          ],
+        };
       }
-      if (value < total) {
+
+      // 2. Cartão na Entrega
+      if (n.includes("cartao") || n.includes("credito") || n.includes("debito") || n.includes("maquininha")) {
+        const nextState: BotState = {
+          ...state,
+          payment: "card",
+          cashFor: null,
+          change: null,
+          step: "confirm_final",
+        };
+        return {
+          state: nextState,
+          replies: [
+            {
+              text: "Combinado! Vamos avisar o motoboy para levar a maquininha 💳",
+            },
+            {
+              text: summaryText(nextState),
+              buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+            },
+          ],
+        };
+      }
+
+      // 3. Dinheiro
+      if (n.includes("dinheiro") || n.includes("especie") || n.includes("nota")) {
+        return {
+          state: { ...state, payment: "cash", step: "cash_change" },
+          replies: [
+            {
+              text: `O total da compra é ${brl(totalOf(state))}.\n\nPrecisa de troco para quanto? (Se tiver o valor exato, pode responder 'não precisa')`,
+            },
+          ],
+        };
+      }
+
+      return keep([
+        {
+          text: "Como você prefere fazer o pagamento?",
+          buttons: PAYMENT_BUTTONS,
+        },
+      ]);
+    }
+
+    case "cash_change": {
+      const total = totalOf(state);
+
+      // Não precisa de troco
+      if (
+        n.includes("nao precisa") ||
+        n.includes("sem troco") ||
+        n.includes("exato") ||
+        n === "nao"
+      ) {
+        const nextState: BotState = {
+          ...state,
+          cashFor: total,
+          change: 0,
+          step: "confirm_final",
+        };
+        return {
+          state: nextState,
+          replies: [
+            {
+              text: "Combinado! Pagamento em dinheiro no valor exato. 💵",
+            },
+            {
+              text: summaryText(nextState),
+              buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+            },
+          ],
+        };
+      }
+
+      const match = text.replace(/[^\d,.]/g, "").replace(",", ".");
+      const val = parseFloat(match);
+
+      if (!val || Number.isNaN(val)) {
         return keep([
           {
-            text: `O total do pedido é ${brl(total)}. Com ${brl(value)} não dá. Vai pagar com quanto?`,
+            text: `Precisa de troco para quanto? Digite o valor da nota que vai pagar (ex: 50 ou 100), ou diga 'não precisa'. Seu total é ${brl(total)}.`,
           },
         ]);
       }
-      const next = { ...state, cashFor: value, step: "confirm" as BotStep };
+
+      if (val < total) {
+        return keep([
+          {
+            text: `O total do pedido é ${brl(total)}. A nota de ${brl(val)} não cobre o valor. Precisa de troco para quanto?`,
+          },
+        ]);
+      }
+
+      const trocoCalculado = Math.round((val - total) * 100) / 100;
+      const nextState: BotState = {
+        ...state,
+        cashFor: val,
+        change: trocoCalculado,
+        step: "confirm_final",
+      };
+
       return {
-        state: next,
+        state: nextState,
         replies: [
           {
-            text: `Anotado! Troco de ${brl(Math.round((value - total) * 100) / 100)} para a nota de ${brl(value)}.`,
+            text: `Anotado! Troco de ${brl(trocoCalculado)} para a nota de ${brl(val)}. 💵`,
           },
-          { text: summaryText(next), buttons: ["Confirmar pedido", "Cancelar"] },
+          {
+            text: summaryText(nextState),
+            buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+          },
         ],
       };
     }
 
-    case "confirm": {
-      if (n.includes("confirmar") || n.includes("sim")) {
-        return { state: { ...state, step: "done" }, replies: [], action: "create_order" };
+    case "confirm_final": {
+      if (
+        n.includes("confirmar") ||
+        n.includes("confirmar pedido") ||
+        n === "sim" ||
+        n === "pode mandar" ||
+        n === "ok"
+      ) {
+        return {
+          state: { ...state, step: "done" },
+          replies: [],
+          action: "create_order",
+        };
       }
+
+      if (n.includes("voltar") || n.includes("corrigir") || n.includes("cancelar")) {
+        return {
+          state: { ...state, step: "review" },
+          replies: [
+            {
+              text: `Voltamos para a revisão dos itens:\n\n${itemsListText(state)}\n\nO que gostaria de adicionar, remover ou corrigir?`,
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+            },
+          ],
+        };
+      }
+
       return keep([
-        { text: "Posso confirmar o pedido?", buttons: ["Confirmar pedido", "Cancelar"] },
+        {
+          text: "Podemos enviar esse pedido para a loja?",
+          buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+        },
       ]);
     }
 

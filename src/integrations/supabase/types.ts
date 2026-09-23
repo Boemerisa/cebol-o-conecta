@@ -98,6 +98,99 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          order_id: string
+          product_id: string | null
+          qty: number
+          total: number
+          unit: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          order_id: string
+          product_id?: string | null
+          qty?: number
+          total?: number
+          unit?: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_id?: string
+          product_id?: string | null
+          qty?: number
+          total?: number
+          unit?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      support_requests: {
+        Row: {
+          created_at: string
+          customer_phone: string
+          handled: boolean
+          id: string
+          message: string
+        }
+        Insert: {
+          created_at?: string
+          customer_phone?: string
+          handled?: boolean
+          id?: string
+          message?: string
+        }
+        Update: {
+          created_at?: string
+          customer_phone?: string
+          handled?: boolean
+          id?: string
+          message?: string
+        }
+        Relationships: []
+      }
+      whatsapp_sessions: {
+        Row: {
+          phone: string
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          phone: string
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          phone?: string
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

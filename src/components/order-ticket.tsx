@@ -80,7 +80,9 @@ export function OrderTicket({
         <div className="rounded-lg border border-border bg-card p-3 text-sm">
           <p className="font-bold">Entrega</p>
           <p>
-            {order.address.street}, {order.address.number} — {order.address.neighborhood}
+            {order.address.street}
+            {order.address.number ? `, ${order.address.number}` : ""}
+            {order.address.neighborhood ? ` — ${order.address.neighborhood}` : ""}
           </p>
           {order.address.complement ? <p>Compl.: {order.address.complement}</p> : null}
           {order.address.reference ? <p>Ref.: {order.address.reference}</p> : null}
@@ -127,9 +129,10 @@ function ThermalReceipt({ order }: { order: Order }) {
       {order.payment.method === "card" ? <p className="font-bold">LEVAR MAQUININHA</p> : null}
       <p>--------------------------------</p>
       <p>
-        {order.address.street}, {order.address.number}
+        {order.address.street}
+        {order.address.number ? `, ${order.address.number}` : ""}
       </p>
-      <p>{order.address.neighborhood}</p>
+      {order.address.neighborhood ? <p>{order.address.neighborhood}</p> : null}
       {order.address.complement ? <p>Compl: {order.address.complement}</p> : null}
       {order.address.reference ? <p>Ref: {order.address.reference}</p> : null}
       <p>Recebe: {order.address.receiver}</p>
