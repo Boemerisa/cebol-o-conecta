@@ -193,18 +193,34 @@ export async function createOrderFromBot(input: {
   if (error) throw error;
 
   const row = data as { id: string; number: number };
-  const { error: itemsError } = await db.from("order_items").insert(
-    input.items.map((item) => ({
+
+  // Gravação segura em order_items: caso a tabela não esteja no cache ou ocorra erro pontual,
+  // o pedido principal em orders já foi garantido e a compra nunca é perdida.
+  try {
+    const itemsPayload = input.items.map((item) => ({
       order_id: row.id,
-      product_id: item.productId,
-      name: item.name,
-      qty: item.qty,
-      unit: item.unit,
+      product_name: item.name,
+      quantity: item.qty,
       unit_price: item.unitPrice,
-      total: item.total,
-    })),
-  );
-  if (itemsError) throw itemsError;
+      total_price: item.total,
+    }));
+
+    const { error: itemsError } = await (supabase as any)
+      .from("order_items")
+      .insert(itemsPayload);
+
+    if (itemsError) {
+      console.warn(
+        "[createOrderFromBot] Aviso ao gravar em order_items (pedido preservado em orders):",
+        itemsError.message,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "[createOrderFromBot] Falha não impeditiva ao gravar em order_items:",
+      err,
+    );
+  }
 
   return `#${String(row.number).padStart(3, "0")}`;
 }

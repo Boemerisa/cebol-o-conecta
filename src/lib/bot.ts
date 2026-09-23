@@ -2,6 +2,7 @@ import { cleanUnknownName, extractRemoval, normalize, parseOrderText, sum } from
 import { brl, qtyLabel } from "./format";
 import { PIX_KEY } from "./catalog";
 import type { Address, OrderItem, PaymentMethod, Product } from "./types";
+export { createOrderFromBot } from "./data";
 
 /** Taxa de entrega padrão da loja (R$ 5,00 fixa). */
 export const DELIVERY_FEE = 5;
