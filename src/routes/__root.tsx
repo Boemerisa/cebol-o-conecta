@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -126,7 +126,7 @@ function RootComponent() {
         <div className="min-h-screen bg-background">
           <header className="sticky top-0 z-20 border-b border-border bg-[image:var(--gradient-fresh)] px-4 py-3 text-primary-foreground shadow-[var(--shadow-soft)]">
             <p className="text-lg font-extrabold leading-tight">🧅 Cebolão</p>
-            <p className="text-xs opacity-90">Empório e Verdurão de bairro</p>
+            <p className="text-xs opacity-90">Empório e Verdurão </p>
           </header>
           <main className="mx-auto w-full max-w-6xl px-4 py-5">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
