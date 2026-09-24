@@ -174,18 +174,21 @@ function CatalogoPage() {
                     {product.unit === "kg" ? "kg" : product.unit === "pct" ? "pacote" : "unidade"}
                   </p>
                 </div>
-                <Input
-                  aria-label={`Preço de ${product.name}`}
-                  defaultValue={product.price.toFixed(2).replace(".", ",")}
-                  inputMode="decimal"
-                  className="h-12 w-24"
-                  onBlur={(event) => {
-                    const value = parseFloat(event.target.value.replace(",", "."));
-                    if (value && value !== product.price) {
-                      updateMutation.mutate({ id: product.id, patch: { price: value } });
-                    }
-                  }}
-                />
+                                <div className="flex items-center rounded-xl border border-input bg-background px-2.5 shadow-sm focus-within:ring-2 focus-within:ring-ring">
+                  <span className="text-xs font-semibold text-muted-foreground mr-1">R$</span>
+                  <input
+                    aria-label={`Preço de ${product.name}`}
+                    defaultValue={product.price.toFixed(2).replace(".", ",")}
+                    inputMode="decimal"
+                    className="h-12 w-20 bg-transparent text-sm font-semibold focus:outline-none"
+                    onBlur={(event) => {
+                      const value = parseFloat(event.target.value.replace(",", "."));
+                      if (value && value !== product.price) {
+                        updateMutation.mutate({ id: product.id, patch: { price: value } });
+                      }
+                    }}
+                  />
+                </div>
                 <Button
                   variant={product.available ? "hero" : "destructive"}
                   size="xl"
