@@ -64,8 +64,15 @@ const STOP = new Set([
 
 /** Divide o texto corrido do cliente ("1kg de tomate, 500g de cebola e 2 alfaces") em blocos de itens. */
 export function splitItems(text: string): string[] {
-  return text
-    .split(/[,\n;]+|\se\s(?=\d|\bmeio\b|\bum\b|\buma\b)|\smais\s(?=\d|\bmeio\b|\bum\b|\buma\b)/gi)
+  // Insere um delimitador antes de novas quantidades que não estejam precedidas por separadores comuns
+  const normalized = text.replace(
+    /(?<=[a-zA-Zá-úÁ-Ú)])\s+(?=(\d+(?:[.,]\d+)?(?:\s*(?:kg|kilos?|g|gramas?|un|und|unidades?|dz|duzias?|dúzias?|pes?|pés?|pct|pacotes?))?\b|\bmeio\b|\bum\b|\buma\b))/gi,
+    ", "
+  );
+
+  return normalized
+    .split(/[,
+;]+|\se\s(?=\d|\bmeio\b|\bum\b|\buma\b)|\smais\s(?=\d|\bmeio\b|\bum\b|\buma\b)/gi)
     .map((chunk) => chunk.trim())
     .filter((chunk) => chunk.length > 1);
 }
