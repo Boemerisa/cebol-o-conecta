@@ -230,10 +230,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       state: { ...initialBotState(), step: "items" },
       replies: [
         {
-          text: "Que ótimo! 😀 Me mande a sua lista de compras em uma mensagem só.
-
-Por exemplo: *1kg de tomate, 500g de cebola, 2 pés de alface e 1 óleo Liza*",
-              buttons: ["Voltar ao início"],
+          text: "Que ótimo! 😀 Me mande a sua lista de compras em uma mensagem só.\n\nPor exemplo: *1kg de tomate, 500g de cebola, 2 pés de alface e 1 óleo Liza*",
           buttons: ["Voltar ao início"],
         },
       ],
