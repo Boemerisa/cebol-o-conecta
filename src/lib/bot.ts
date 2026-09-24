@@ -504,20 +504,50 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         };
       }
 
-      if (n.includes("adicionar mais") || n.includes("adicionar")) {
+      // Quando o cliente clica em "Alterar pedido" ou digita comandos de alteração
+      if (
+        n === "alterar pedido" ||
+        n === "alterar" ||
+        n.includes("mudar") ||
+        n.includes("corrigir") ||
+        n.includes("adicionar mais")
+      ) {
         return keep([
           {
-            text: "Pode escrever o que deseja adicionar (ex: '1kg de batata e 1 óleo Liza'):",
+            text: "O que você gostaria de mudar? 😊\n\nVocê pode me dizer:\n• O que tirar (ex: *'tirar tomate'*)\n• O que adicionar (ex: *'mais 1kg de banana'*)\n• Ou enviar sua lista completa novamente.",
+            buttons: ["Voltar ao início"],
           },
         ]);
       }
 
-      if (n.includes("corrigir") || n.includes("mudar")) {
-        return keep([
-          {
-            text: "O que você deseja mudar? Você pode me dizer para remover (ex: 'tirar tomate'), adicionar (ex: 'mais 1kg de cebola') ou mandar a lista completa novamente.",
-          },
-        ]);
+      // Se o usuário digitou novos itens diretamente (ex: "1kg de tomate")
+      const directAdditions = parseItemsInput(text, products);
+      if (directAdditions.items.length > 0) {
+        const items = [...state.items];
+        for (const item of directAdditions.items) {
+          const existing = items.find((i) => i.productId === item.productId);
+          if (existing) {
+            existing.qty = Math.round((existing.qty + item.qty) * 1000) / 1000;
+            existing.total = Math.round(existing.qty * existing.unitPrice * 100) / 100;
+          } else {
+            items.push(item);
+          }
+        }
+        const updatedState = { ...state, items };
+        const replies: BotReply[] = [];
+        if (directAdditions.unknown.length > 0) {
+          replies.push({
+            text: `Aviso: não temos '${directAdditions.unknown[0]}' no momento.`,
+          });
+        }
+        replies.push({
+          text: `Atualizei seu pedido! 🛒\n\n${itemsListText(updatedState)}\n\nTudo certo agora?`,
+          buttons: ["Está certo! Prosseguir", "Alterar pedido"],
+        });
+        return {
+          state: updatedState,
+          replies,
+        };
       }
 
       return keep([
