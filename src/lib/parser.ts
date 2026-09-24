@@ -64,17 +64,18 @@ const STOP = new Set([
 
 /** Divide o texto corrido do cliente ("1kg de tomate, 500g de cebola e 2 alfaces") em blocos de itens. */
 export function splitItems(text: string): string[] {
-  // Insere um delimitador antes de novas quantidades que não estejam precedidas por separadores comuns
+  // Insere um separador antes de novas quantidades quando o utilizador escreve sem pontuação
   const normalized = text.replace(
-    /(?<=[a-zA-Zá-úÁ-Ú)])\s+(?=(\d+(?:[.,]\d+)?(?:\s*(?:kg|kilos?|g|gramas?|un|und|unidades?|dz|duzias?|dúzias?|pes?|pés?|pct|pacotes?))?\b|\bmeio\b|\bum\b|\buma\b))/gi,
+    new RegExp("(?<=[a-zA-Zá-úÁ-Ú)])\\s+(?=(\\d+(?:[.,]\\d+)?(?:\\s*(?:kg|kilos?|g|gramas?|un|und|unidades?|dz|duzias?|dúzias?|pes?|pés?|pct|pacotes?))?\\b|\\bmeio\\b|\\bum\\b|\\buma\\b))", "gi"),
     ", "
   );
 
+  const splitPattern = new RegExp("[,;\\n]+|\\se\\s(?=\\d|\\bmeio\\b|\\bum\\b|\\buma\\b)|\\smais\\s(?=\\d|\\bmeio\\b|\\bum\\b|\\buma\\b)", "gi");
+
   return normalized
-    .split(/[,
-;]+|\se\s(?=\d|\bmeio\b|\bum\b|\buma\b)|\smais\s(?=\d|\bmeio\b|\bum\b|\buma\b)/gi)
+    .split(splitPattern)
     .map((chunk) => chunk.trim())
-    .filter((chunk) => chunk.length > 1);
+    .filter((chunk) => chunk.length > 0);
 }
 
 export function parseQty(chunk: string): { qty: number; explicitUnit: "kg" | "un" | "pct" | null; rest: string } {
