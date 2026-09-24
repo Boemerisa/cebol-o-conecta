@@ -77,7 +77,7 @@ const PAYMENT_BUTTONS = ["Pix", "CartÃ£o na entrega", "Dinheiro"];
 
 export function itemsListText(state: BotState): string {
   const lines = state.items.map(
-    (item, index) => `${index + 1}. ${qtyLabel(item.qty, item.unit)} ${item.name} â€” ${brl(item.total)}`,
+    (item, index) => `${index + 1}. ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   );
   return [
     "*Itens identificados:*",
@@ -91,7 +91,7 @@ export function itemsListText(state: BotState): string {
 
 export function summaryText(state: BotState, orderNumber?: string): string {
   const lines = state.items.map(
-    (item) => `â€¢ ${qtyLabel(item.qty, item.unit)} ${item.name} â€” ${brl(item.total)}`,
+    (item) => `â€¢ ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   );
   const payment =
     state.payment === "pix"
@@ -178,7 +178,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       return {
         state,
         replies: [
-          { text: "Sua mensagem foi recebida e será respondida em breve. ?? Se quiser voltar ao menu principal, digite 'voltar'." },
+          { text: "Sua mensagem foi recebida e será respondida em breve. 😊 Se quiser voltar ao menu principal, digite 'voltar'." },
         ],
         action: "human",
       };
@@ -197,7 +197,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...initialBotState(), step: "human" },
           replies: [
             {
-              text: "Tudo bem! O responsÃ¡vel irÃ¡ atendÃª-lo em instantes. ðŸ˜Š",
+              text: "Tudo bem! O responsável irá atendê-lo em instantes. 😊",
             },
           ],
           action: "human",
@@ -218,7 +218,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...initialBotState(), step: "items" },
           replies: [
             {
-              text: "Que Ã³timo! ðŸ˜€ Me mande a sua lista de compras em uma mensagem sÃ³.\n\nPor exemplo: *1kg de tomate, 500g de cebola, 2 pÃ©s de alface e 1 Ã³leo Liza*",
+              text: "Que ótimo! 😀 Me mande a sua lista de compras em uma mensagem só.\n\nPor exemplo: *1kg de tomate, 500g de cebola, 2 pés de alface e 1 óleo Liza*",
             },
           ],
         };
@@ -282,7 +282,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       // Todos os itens reconhecidos: vai para a revisÃ£o
       replies.push({
         text: `${itemsListText(mergedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-        buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+        buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
       });
 
       return {
@@ -306,7 +306,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           replies: [
             {
               text: `Combinado! Seguindo sem o item.\n\n${itemsListText(state)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-              buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
             },
           ],
         };
@@ -340,7 +340,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           replies: [
             {
               text: `Adicionei Ã  lista! Veja como ficou:\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-              buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
             },
           ],
         };
@@ -398,7 +398,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           replies: [
             {
               text: `Removi *${removal.removed.name}* da lista! âœ…\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-              buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
             },
           ],
         };
@@ -426,7 +426,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         }
         extraReplies.push({
           text: `Atualizei seu pedido! ðŸ›’\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-          buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+          buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
         });
         return {
           state: updatedState,
@@ -453,7 +453,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       return keep([
         {
           text: "Podemos prosseguir com esse pedido ou gostaria de ajustar algum item?",
-          buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+          buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
         },
       ]);
     }
@@ -675,7 +675,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           replies: [
             {
               text: `Voltamos para a revisÃ£o dos itens:\n\n${itemsListText(state)}\n\nO que gostaria de adicionar, remover ou corrigir?`,
-              buttons: ["EstÃ¡ certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
             },
           ],
         };
