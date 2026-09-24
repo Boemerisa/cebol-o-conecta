@@ -89,6 +89,32 @@ export function itemsListText(state: BotState): string {
   ].join("\n");
 }
 
+
+export function isStoreOpen(date: Date = new Date()): boolean {
+  // Ajuste para horário de Brasília (UTC-3)
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  const brDate = new Date(utc - 3 * 3600000);
+  const day = brDate.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  const minutes = brDate.getHours() * 60 + brDate.getMinutes();
+
+  const openTime = 7 * 60 + 30; // 07:30 (450 min)
+
+  if (day >= 1 && day <= 5) {
+    // Seg a Sex: 07:30 às 19:00 (1140 min)
+    return minutes >= openTime && minutes < 19 * 60;
+  } else if (day === 6) {
+    // Sábado: 07:30 às 16:00 (960 min)
+    return minutes >= openTime && minutes < 16 * 60;
+  } else if (day === 0) {
+    // Domingo: 07:30 às 12:00 (720 min)
+    return minutes >= openTime && minutes < 12 * 60;
+  }
+  return false;
+}
+
+export const CLOSED_STORE_MESSAGE =
+  "Desculpe, estamos fechados no momento! Horário de atendimento: seg a sex — 07:30 às 19h, sáb — 07:30 às 16h, e dom — 07:30 às 12h";
+
 export function summaryText(state: BotState, orderNumber?: string): string {
   const lines = state.items.map(
     (item) => `• ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
@@ -119,6 +145,7 @@ export function summaryText(state: BotState, orderNumber?: string): string {
     "",
     `📍 *Endereço:* ${state.address.street}`,
     `👤 *Recebe:* ${state.address.receiver}`,
+    `📅 *Data e Hora:* ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(new Date()).replace(", ", " às ")}`,
   ].join("\n");
 }
 

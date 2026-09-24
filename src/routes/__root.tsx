@@ -135,7 +135,7 @@ function RootComponent() {
           <nav className="no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-border bg-card">
             {[
               { to: "/", label: "Pedidos", Icon: ShoppingBasket },
-              { to: "/catalogo", label: "Preços", Icon: Tags },
+              { to: "/catalogo", label: "Catálogo", Icon: Tags },
               { to: "/simulador", label: "Simulador WhatsApp", Icon: MessageSquareText },
             ].map(({ to, label, Icon }) => (
               <Link
