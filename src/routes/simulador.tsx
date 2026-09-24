@@ -129,7 +129,7 @@ function SimuladorPage() {
           text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido já caiu na tela de separação da loja!* Avisaremos quando sair para entrega. Muito obrigado pela preferência! 🧅💚`,
         },
         {
-          text: "Deseja fazer mais algum teste?",
+          text: "Ajudo em algo mais?",
           buttons: WELCOME_BUTTONS,
         },
       ]);

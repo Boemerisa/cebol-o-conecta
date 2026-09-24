@@ -73,7 +73,7 @@ export function totalOf(state: BotState): number {
   return Math.round((subtotalOf(state) + DELIVERY_FEE) * 100) / 100;
 }
 
-const PAYMENT_BUTTONS = ["Pix", "CartÃ£o na entrega", "Dinheiro"];
+const PAYMENT_BUTTONS = ["Pix", "Cartão na entrega", "Dinheiro"];
 
 export function itemsListText(state: BotState): string {
   const lines = state.items.map(
@@ -89,24 +89,24 @@ export function itemsListText(state: BotState): string {
   ].join("\n");
 }
 
-export function summaryText(state: BotState, orderNumber?: string): string {
+    (item) => `• ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   const lines = state.items.map(
     (item) => `â€¢ ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   );
   const payment =
-    state.payment === "pix"
+        ? "Cartão na entrega (motoboy leva maquininha)"
       ? "Pix"
       : state.payment === "card"
-        ? "CartÃ£o na entrega (motoboy leva maquininha)"
+        ? "Cartão na entrega (motoboy leva maquininha)"
         : "Dinheiro";
-
+      ? `\n  💵 Troco de ${brl(state.change ?? Math.round((state.cashFor - totalOf(state)) * 100) / 100)} para ${brl(state.cashFor)}`
   const trocoText =
-    state.payment === "cash" && state.cashFor && state.cashFor > totalOf(state)
+        ? "\n  💵 Pagamento exato (sem troco)"
       ? `\n  ðŸ’µ Troco de ${brl(state.change ?? Math.round((state.cashFor - totalOf(state)) * 100) / 100)} para ${brl(state.cashFor)}`
       : state.payment === "cash"
         ? "\n  ðŸ’µ Pagamento exato (sem troco)"
         : "";
-
+    orderNumber ? `🎉 *Pedido #${orderNumber} confirmado com sucesso!*` : "📋 *Resumo do Pedido*",
   return [
     orderNumber ? `ðŸŽ‰ *Pedido ${orderNumber} confirmado com sucesso!*` : "ðŸ“‹ *Resumo do Pedido*",
     "",
@@ -115,8 +115,8 @@ export function summaryText(state: BotState, orderNumber?: string): string {
     `Subtotal: ${brl(subtotalOf(state))}`,
     `Taxa de entrega: ${brl(DELIVERY_FEE)}`,
     `*Total: ${brl(totalOf(state))}*`,
-    `Forma de pagamento: ${payment}${trocoText}`,
-    "",
+    `📍 *Endereço:* ${state.address.street}`, 
+    `👤 *Recebe:* ${state.address.receiver}`,
     `ðŸ“ *EndereÃ§o:* ${state.address.street}`,
     `ðŸ‘¤ *Recebe:* ${state.address.receiver}`,
   ].join("\n");
@@ -372,7 +372,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...state, step: "address" },
           replies: [
             {
-              text: "Perfeito! Agora vamos para o endereÃ§o de entrega.\n\nPor favor, digite o endereÃ§o de entrega em uma sÃ³ linha (rua, nÃºmero, bairro, complemento e ponto de referÃªncia, se tiver).",
+              text: "Perfeito! Agora vamos para o endereço de entrega.\n\nPor favor, digite o endereço de entrega em uma só linha (rua, número, bairro, complemento e ponto de referência, se tiver).",
             },
           ],
         };
@@ -481,7 +481,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         state: nextState,
         replies: [
           {
-            text: "Anotado! ðŸ“\n\nE quem vai receber o pedido? Por favor, digite o seu nome.",
+            text: "Anotado! 📍\n\nE quem vai receber o pedido? Por favor, digite o seu nome.",
           },
         ],
       };
@@ -509,7 +509,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         state: nextState,
         replies: [
           {
-            text: `Muito obrigado, ${text}! ðŸ˜Š\n\nSubtotal dos itens: ${brl(subtotalOf(state))}\nTaxa de entrega fixa: ${brl(DELIVERY_FEE)}\n*Total a pagar: ${brl(totalOf(state))}*\n\nComo vocÃª prefere fazer o pagamento?`,
+            text: `Muito obrigado, ${text}! 😊\n\nSubtotal dos itens: ${brl(subtotalOf(state))}\nTaxa de entrega fixa: ${brl(DELIVERY_FEE)}\n*Total a pagar: ${brl(totalOf(state))}*\n\nComo você prefere fazer o pagamento?`,
             buttons: PAYMENT_BUTTONS,
           },
         ],
@@ -569,7 +569,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...state, payment: "cash", step: "cash_change" },
           replies: [
             {
-              text: `O total da compra Ã© ${brl(totalOf(state))}.\n\nPrecisa de troco para quanto? (Se tiver o valor exato, pode responder 'nÃ£o precisa')`,
+              text: `O total da compra é ${brl(totalOf(state))}.\n\nPrecisa de troco para quanto? (Se tiver o valor exato, pode responder 'não precisa')`,
             },
           ],
         };
@@ -644,7 +644,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         state: nextState,
         replies: [
           {
-            text: `Anotado! Troco de ${brl(trocoCalculado)} para a nota de ${brl(val)}. ðŸ’µ`,
+            text: `Anotado! Troco de ${brl(trocoCalculado)} para a nota de ${brl(val)}. 💵`,
           },
           {
             text: summaryText(nextState),
