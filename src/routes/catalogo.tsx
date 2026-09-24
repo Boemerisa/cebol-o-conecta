@@ -96,7 +96,7 @@ function CatalogoPage() {
       <header className="space-y-1">
         <h1 className="text-2xl font-extrabold">Catálogo e preços</h1>
         <p className="text-sm text-muted-foreground">
-          Toque em <strong>Esgotado</strong> quando o produto acabar.
+          Toque no botão de cada produto para alternar entre <strong>Disponível</strong> e <strong>Esgotado</strong>.
         </p>
       </header>
 
