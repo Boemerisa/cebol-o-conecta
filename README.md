@@ -6,6 +6,7 @@
 
 [![Deploy with Vercel](https://therealsujitk-vercel-badge.vercel.app/?app=cebol-o-conecta)](https://cebol-o-conecta.vercel.app)
 ![Lovable](https://img.shields.io/badge/Generated_With-Lovable.dev-ff4b4b?logo=lovable)
+![Google Antigravity](https://img.shields.io/badge/Agent_IDE-Google_Antigravity-4285F4?logo=google)
 ![Claude](https://img.shields.io/badge/AI_Pair-Claude%203.5-D97706?logo=anthropic)
 ![Gemini](https://img.shields.io/badge/AI_Pair-Gemini-4285F4?logo=google)
 ![Supabase](https://img.shields.io/badge/Backend-Supabase-3ecf8e?logo=supabase)
@@ -70,8 +71,8 @@ This product was brought from operational concept to live production by leveragi
 | Layer | Tool / Engine | Strategic Function |
 |---|---|---|
 | **AI Product Generation** | **Lovable.dev** | Full-stack scaffolding, React component synthesis, UI layouts, and state management. |
-| **Logic & Prompt Design** | **Google Gemini** | Iterative prompt crafting, heuristic parsing workflows, and conversational business rules. |
-| **Agentic Workflow** | **Antigravity** | Workspace orchestration and structured agent-assisted generation cycles. |
+| **Agent Workspace & IDE** | **Google Antigravity** | Agentic workflows, task execution, environment orchestration, and iterative multi-file generation. |
+| **Logic & Architecture** | **Claude & Gemini** | Iterative prompt crafting, heuristic parsing workflows, code refinement, and state machine architecture. |
 | **Database & Auth** | **Supabase / PostgreSQL** | Managed relational data store, order persistence, and cloud storage. |
 | **Deployment & CI/CD** | **Vercel** | Edge production hosting and automatic Git-integrated deployments. |
 
