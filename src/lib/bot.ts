@@ -7,8 +7,7 @@ export { createOrderFromBot } from "./data";
 /** Taxa de entrega padrÃ£o da loja (R$ 5,00 fixa). */
 export const DELIVERY_FEE = 5;
 
-export const WELCOME_TEXT =
-  "Oi! ðŸ˜Š Aqui Ã© o CebolÃ£o EmpÃ³rio e VerdurÃ£o â€” hortifruti fresquinho e mercearia com entrega no Setor Oeste e regiÃ£o. Como posso te ajudar hoje?";
+export const WELCOME_TEXT = "Oi! 😊 Aqui é o Cebolão Empório e Verdurão — hortifruti fresquinho e mercearia com entrega no Setor Oeste e região. Como posso te ajudar hoje?";
 
 export const WELCOME_BUTTONS = ["Fazer pedido", "Falar com atendente"];
 
