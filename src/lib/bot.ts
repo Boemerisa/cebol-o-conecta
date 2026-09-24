@@ -604,7 +604,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
             },
             {
               text: summaryText(nextState),
-              buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
             },
           ],
         };
@@ -627,7 +627,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
             },
             {
               text: summaryText(nextState),
-              buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
             },
           ],
         };
@@ -677,7 +677,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
             },
             {
               text: summaryText(nextState),
-              buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
             },
           ],
         };
@@ -718,13 +718,30 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           },
           {
             text: summaryText(nextState),
-            buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+            buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
           },
         ],
       };
     }
 
     case "confirm_final": {
+      if (
+        n === "alterar forma de pagamento" ||
+        n === "alterar pagamento" ||
+        n === "mudar pagamento" ||
+        n === "trocar pagamento"
+      ) {
+        return {
+          state: { ...state, step: "payment" },
+          replies: [
+            {
+              text: "Sem problemas! Como você prefere fazer o pagamento?",
+              buttons: PAYMENT_BUTTONS,
+            },
+          ],
+        };
+      }
+
       if (
         n.includes("confirmar") ||
         n.includes("confirmar pedido") ||
@@ -754,7 +771,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       return keep([
         {
           text: "Podemos enviar esse pedido para a loja?",
-          buttons: ["Confirmar pedido", "Voltar / Corrigir"],
+          buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
         },
       ]);
     }
