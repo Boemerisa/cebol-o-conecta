@@ -352,7 +352,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       // Todos os itens reconhecidos: vai para a revisÃ£o
       replies.push({
         text: `${itemsListText(mergedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-        buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+        buttons: ["Está certo! Prosseguir", "Alterar pedido"],
       });
 
       return {
@@ -376,7 +376,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           replies: [
             {
               text: `Combinado! Seguindo sem o item.\n\n${itemsListText(state)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              buttons: ["Está certo! Prosseguir", "Alterar pedido"],
             },
           ],
         };
@@ -410,7 +410,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           replies: [
             {
               text: `Adicionei Ã  lista! Veja como ficou:\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              buttons: ["Está certo! Prosseguir", "Alterar pedido"],
             },
           ],
         };
@@ -467,8 +467,8 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: updatedState,
           replies: [
             {
-              text: `Removi *${removal.removed.name}* da lista! âœ…\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              text: `Removi *${removal.removed.name}* da lista! ✅\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+              buttons: ["Está certo! Prosseguir", "Alterar pedido"],
             },
           ],
         };
@@ -495,8 +495,8 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           });
         }
         extraReplies.push({
-          text: `Atualizei seu pedido! ðŸ›’\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
-          buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+          text: `Atualizei seu pedido! 🛒\n\n${itemsListText(updatedState)}\n\nConfere? Quer adicionar, remover ou corrigir algum item?`,
+          buttons: ["Está certo! Prosseguir", "Alterar pedido"],
         });
         return {
           state: updatedState,
@@ -523,7 +523,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       return keep([
         {
           text: "Podemos prosseguir com esse pedido ou gostaria de ajustar algum item?",
-          buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+          buttons: ["Está certo! Prosseguir", "Alterar pedido"],
         },
       ]);
     }
@@ -744,8 +744,8 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...state, step: "review" },
           replies: [
             {
-              text: `Voltamos para a revisÃ£o dos itens:\n\n${itemsListText(state)}\n\nO que gostaria de adicionar, remover ou corrigir?`,
-              buttons: ["Está certo! Prosseguir", "Adicionar mais itens", "Corrigir lista"],
+              text: `Voltamos para a revisão dos itens:\n\n${itemsListText(state)}\n\nO que gostaria de adicionar, remover ou corrigir?`,
+              buttons: ["Está certo! Prosseguir", "Alterar pedido"],
             },
           ],
         };
