@@ -1,24 +1,106 @@
-# Cebolão Conecta
+# 🧅 Cebolão Conecta — Plataforma Omnichannel de Pedidos & Operação Logística
 
-Crie uma aplicação web responsiva (Mobile-First) e um assistente de pedidos para WhatsApp para uma mercearia e verdurão de bairro chamada "Cebolão Empório e Verdurão". A dona do comércio atende tudo manualmente no papel, usa calculadora física e não tem computadores. O objetivo do sistema é eliminar erros de pedidos esquecidos, cálculos incorretos de valores e falhas na cobrança/troco para o entregador. ### 1. Filosofia de Design e Usabilidade - **Interface do Cliente (Simulador do Bot WhatsApp):** Fluxo de conversa humanizado, simples e direto, focado em extrair itens, quantidades (kg, unidade, pacote), endereço e forma de pagamento. - **Painel da Dona (Painel do Comerciante):** Interface para celular, botões grandes, alto contraste, sem termos técnicos, fácil de usar atrás do balcão com poucos toques. ### 2. Módulos e Funcionalidades Principais #### A. Fluxo de Atendimento e Extração do Pedido (IA / Regras) 1. **Boas-vindas:** Mensagem calorosa em nome do "Cebolão Empório e Verdurão". 2. **Coleta de Itens:** Aceita texto corrido, listas ou áudio simulado (ex: "1kg de tomate, 2 pés de alface, 1 óleo de soja Liza e 500g de cebola"). 3. **Cálculo Automático:** Identifica os produtos no catálogo, calcula o subtotal e soma a taxa de entrega por bairro/distância. 4. **Forma de Pagamento:** Opções claras: Pix (com chave Copia e Cola), Cartão na Entrega (Crédito/Débito - avisar maquininha ao motoboy) ou Dinheiro (com pergunta obrigatória: "Precisa de troco para quanto?"). 5. **Endereço Completo:** Coleta Rua, Número, Bairro, Complemento, Ponto de Referência e Nome de quem recebe. 6. **Confirmação e Recibo:** Gera um resumo final numerado (#001) para confirmação do cliente antes de enviar à cozinha/separação. #### B. Painel de Controle de Pedidos (Para a Dona da Loja) - **Quadro de Pedidos (Kanban Simples):** Colunas com status claros: "Novo Pedido" (com alerta sonoro e visual), "Em Separação", "Saiu para Entrega", "Finalizado". - **Comanda Digital / Impressão:** - Layout pronto para impressão térmica (58mm/80mm) ou print de tela no celular. - Checklist com caixas de seleção (checkbox) para ela marcar os itens físicos enquanto separa. - Destaque em vermelho/amarelo para: FORMA DE PAGAMENTO e VALOR DO TROCO (ex: "LEVAR TROCO DE R$ 23,50 PARA NOTA DE R$ 50,00"). - **Catálogo de Preços Rápido:** - Cadastro simples com categorias: Hortifruti (preço por kg/un), Mercearia, Laticínios e Frios, Bebidas, Limpeza. - Botão rápido de "Disponível / Esgotado". #### C. Simulador de WhatsApp Integrado - Adicione uma aba na interface com um simulador visual de WhatsApp para testar a conversa em tempo real, ver o JSON do pedido sendo gerado e verificar o pedido caindo instantaneamente no painel da loja. - Deixe o backend (Supabase/Node) preparado com endpoints/webhooks para conectar com APIs de WhatsApp (como Evolution API, Z-API ou Baileys). ### 3. Identidade Visual e Stack - Cores: Verde hortifruti (`#16a34a`), toques em tons terrosos suaves e fundo claro e limpo. - Ícones: Biblioteca Lucide-react para identificação visual clara (WhatsApp, Sacola, Impressora, Dinheiro, Alerta). - Inclua dados mockados iniciais com cerca de 20 produtos clássicos de mercearia e verdurão (banana, tomate, batata, cebola, arroz, feijão, leite, óleo, etc.) para testar os totais de imediato.
+[![Deploy com Vercel](https://therealsujitk-vercel-badge.vercel.app/?app=cebol-o-conecta)](https://cebol-o-conecta.vercel.app)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
+![React](https://img.shields.io/badge/React-18.x-61dafb?logo=react)
+![Supabase](https://img.shields.io/badge/Backend-Supabase%20%2F%20PostgreSQL-3ecf8e?logo=supabase)
+![TailwindCSS](https://img.shields.io/badge/Style-TailwindCSS-38b2ac?logo=tailwind-css)
 
-This project was built with [Lovable](https://lovable.dev).
+> **Solução Full-Stack para automação de vendas conversacionais, gestão de pedidos em tempo real e controle de expedição física para varejo alimentício e hortifrúti.**
 
-## Build with Lovable
+🔗 **Live Demo:** [https://cebol-o-conecta.vercel.app](https://cebol-o-conecta.vercel.app)  
+📂 **Simulador WhatsApp:** [https://cebol-o-conecta.vercel.app/simulador](https://cebol-o-conecta.vercel.app/simulador)
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/0ee20bf1-d3cb-42bd-98ce-a3e15c234ffa).
+---
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## 📌 Contexto & O Problema Real
 
-## Development
+No varejo de hortifrúti e mercearias locais, o WhatsApp é o canal primário de vendas, porém gera gargalos operacionais críticos:
+- **Atendimento manual demorado:** Digitação de pedidos item por item em horários de pico.
+- **Erros de cálculo de troco e frete:** Desvios de caixa na entrega por erros de cálculo manual dos operadores.
+- **Falta de visibilidade na separação:** Comandas perdidas em papel e atrito na comunicação com entregadores.
+- **Ruptura de estoque mal comunicada:** Clientes frustrados ao pedir itens esgotados sem sugestões imediatas.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+O **Cebolão Conecta** foi desenvolvido como uma solução de ponta a ponta que une um **motor conversacional de processamento de linguagem natural**, **painel operacional Kanban em tempo real** e **módulo de catálogo dinâmico**.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+---
+
+## 🏗 Arquitetura da Solução
+
+                    ┌────────────────────────────────────────┐
+                    │              CLIENTES                  │
+                    └───────────────┬────────────────────────┘
+                                    │ (Mensagens / Pedidos)
+                                    ▼
+         ┌─────────────────────────────────────────────────────────┐
+         │            ENGINE CONVERSACIONAL (Edge / Client)         │
+         │   - Tokenização e Parser Heurístico (Pesos & Unidades)  │
+         │   - Detecção de Ruptura com Sugestão de Substitutos     │
+         │   - Máquina de Estados Finitos (FSM da Sessão)          │
+         └───────────────┬─────────────────────────┬───────────────┘
+                         │                         │
+              (Gravação de Pedido)         (Transbordo Humano)
+                         ▼                         ▼
+         ┌─────────────────────────┐     ┌─────────────────────────┐
+         │     TABLE: `orders`     │     │ `support_requests`      │
+         │  - Status de Expedição  │     │ - Atendimento em fila   │
+         │  - Cálculo de Troco/Pix │     │ - Alertas sonoros push  │
+         └───────────────┬─────────┘     └─────────┬───────────────┘
+                         │                         │
+                         └───────────┬─────────────┘
+                                     ▼
+         ┌─────────────────────────────────────────────────────────┐
+         │               PAINEL OPERACIONAL LOJISTA                │
+         │   - Kanban com Máquina de Estados (Novo ➔ Finalizado)   │
+         │   - Impressão Térmica de Comanda (58mm / 80mm)          │
+         │   - Alertas visuais e sonoros dedicados                 │
+         └─────────────────────────────────────────────────────────┘
+
+---
+
+## ✨ Destaques de Engenharia & Funcionalidades
+
+### 1. Motor Conversacional de Pedidos (`src/lib/bot.ts`)
+- **Parser de Linguagem Natural Heurístico:** Converte frases informais em itens estruturados (`"2kg de batata, 1 óleo e 500g cebola"` ➔ `[{ name, quantity: 2, unit: 'kg' }, ...]`).
+- **Resolução de Ruptura de Estoque (Out-of-Stock Engine):** Caso um item esteja indisponível, o motor notifica o cliente e sugere produtos correlatos da mesma categoria automaticamente.
+- **Transbordo para Atendimento Humano:** Separação entre fluxo transacional de pedidos e chamados manuais, isolando solicitações na fila de *Conversas Pendentes* com alerta sonoro dedicado (660 Hz vs 880 Hz para pedidos).
+
+### 2. Painel de Despacho & Kanban Operacional (`src/routes/index.tsx`)
+- **Pipeline de Separação:** Transição entre `Novo Pedido` ➔ `Em Separação` ➔ `Saiu para Entrega` ➔ `Finalizado`.
+- **Cálculo de Troco Dinâmico:** Destaque visual do valor exato de troco a ser enviado pelo entregador conforme a cédula informada pelo cliente.
+- **Impressão de Comanda para Cupom Térmico:** CSS otimizado para impressoras térmicas padrão 58mm/80mm com lista de conferência (checklist).
+
+### 3. Catálogo em Tempo Real (`src/routes/catalogo.tsx`)
+- Edição inline de preços com prefixo monetário padronizado e tratamento de casas decimais.
+- Alternância instantânea de disponibilidade (`Disponível` / `Esgotado`) refletida imediatamente no motor do bot.
+
+---
+
+## 🛠 Tech Stack & Ferramentas
+
+| Camada | Tecnologia | Decisão Técnica |
+|---|---|---|
+| **Linguagem** | **TypeScript 5.x** | Tipagem estrita de schemas de pedidos, endereçamento e payloads de transação. |
+| **Frontend** | **React 18 + TanStack Router** | Roteamento baseado em tipos (file-based routing) com code-splitting automático. |
+| **Data Fetching** | **TanStack Query (React Query)** | Cache inteligente, mutações otimistas e sincronização de dados em background. |
+| **Backend & DB** | **Supabase / PostgreSQL** | Persistência relacional, Row Level Security (RLS) e APIs performáticas. |
+| **Estilização** | **Tailwind CSS + Radix UI** | Acessibilidade nativa (WAI-ARIA) via componentes shadcn/ui e design mobile-first. |
+| **Deploy** | **Vercel** | CI/CD automático conectado à branch `main` com Edge Caching. |
+
+---
+
+## 🧪 Decisões de Engenharia & Resiliência
+
+1. **Sanitização de Codificação UTF-8:** Tratamento estrito de caracteres especiais e acentuação em strings e mensagens automatizadas para evitar quebras em diferentes sistemas operacionais.
+2. **Defensive Programming na Persistência:** Implementação de camadas de fallback (`try/catch` granulares) ao gravar itens de pedidos (`order_items`), assegurando que instabilidades temporárias de tabelas filhas nunca impeçam a gravação do pedido principal (`orders`).
+3. **Ergonomia Operacional no Ponto de Venda:** Inputs numéricos com atributos `inputMode="decimal"` e touch targets generosos (`h-12`) voltados ao uso diário ágil em smartphones e tablets de balcão.
+
+---
+
+## 👤 Autora
+
+Desenvolvido por **Isabella Boemer**
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/isabella-boemer)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Boemerisa)
+[![Live Demo](https://img.shields.io/badge/Aplicação_Live-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://cebol-o-conecta.vercel.app)
