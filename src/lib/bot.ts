@@ -210,9 +210,9 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       state: { ...initialBotState(), step: "human" },
       replies: [
         {
-          text: "Tudo bem! O responsável irá atendê-lo em instantes. 😊",
-              buttons: ["Fazer um pedido", "Voltar ao início"],
-          buttons: ["Fazer um pedido", "Voltar ao início"],
+          text: "Tudo bem! O responsável irá atendê-lo em instantes. Deixe aqui a sua mensagem 😊",
+          buttons: ["Voltar ao início"],
+          buttons: ["Voltar ao início"],
         },
       ],
       action: "human",
@@ -267,7 +267,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: { ...initialBotState(), step: "human" },
           replies: [
             {
-              text: "Tudo bem! O responsável irá atendê-lo em instantes. 😊",
+              text: "Tudo bem! O responsável irá atendê-lo em instantes. Deixe aqui a sua mensagem 😊",
             },
           ],
           action: "human",
