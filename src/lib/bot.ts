@@ -387,7 +387,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
             state: { ...state, items: [], step: "items" },
             replies: [
               {
-                text: `Removi ${removal.removed.name}. Sua lista agora estÃ¡ vazia. Pode me enviar uma nova lista de itens:`,
+                text: `Removi ${removal.removed.name}. Sua lista agora está vazia. Pode me enviar uma nova lista de itens:`,
               },
             ],
           };
@@ -437,7 +437,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       if (n.includes("adicionar mais") || n.includes("adicionar")) {
         return keep([
           {
-            text: "Pode escrever o que deseja adicionar (ex: '1kg de batata e 1 Ã³leo Liza'):",
+            text: "Pode escrever o que deseja adicionar (ex: '1kg de batata e 1 óleo Liza'):",
           },
         ]);
       }
@@ -445,7 +445,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       if (n.includes("corrigir") || n.includes("mudar")) {
         return keep([
           {
-            text: "O que vocÃª deseja mudar? VocÃª pode me dizer para remover (ex: 'tirar tomate'), adicionar (ex: 'mais 1kg de cebola') ou mandar a lista completa novamente.",
+            text: "O que você deseja mudar? Você pode me dizer para remover (ex: 'tirar tomate'), adicionar (ex: 'mais 1kg de cebola') ou mandar a lista completa novamente.",
           },
         ]);
       }
@@ -530,7 +530,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: nextState,
           replies: [
             {
-              text: `Chave Pix do CebolÃ£o (Copia e Cola):\n\`${PIX_KEY}\`\n\nVocÃª pode efetuar a transferÃªncia e nos enviar o comprovante apÃ³s a confirmaÃ§Ã£o.`,
+              text: `Chave Pix do Cebolão (Copia e Cola):\n\`${PIX_KEY}\`\n\nVocê pode efetuar a transferência e nos enviar o comprovante após a confirmação.`,
             },
             {
               text: summaryText(nextState),
