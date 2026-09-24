@@ -12,8 +12,7 @@
 
 > **Full-Stack solution for conversational sales automation, real-time Kanban order management, and physical dispatch control for local grocery retail.**
 
-🔗 **Live Demo (Open Access):** [https://cebol-o-conecta.vercel.app](https://cebol-o-conecta.vercel.app)  
-📱 **WhatsApp Simulator:** [https://cebol-o-conecta.vercel.app/simulador](https://cebol-o-conecta.vercel.app/simulador)
+🔗 **[Live Demo](https://cebol-o-conecta.vercel.app)**
 
 > 💡 *Note: The point-of-sale operator PIN gate has been bypassed in this public live preview to allow frictionless testing and portfolio evaluation.*
 
