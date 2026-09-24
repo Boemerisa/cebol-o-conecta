@@ -89,36 +89,36 @@ export function itemsListText(state: BotState): string {
   ].join("\n");
 }
 
-    (item) => `• ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
+export function summaryText(state: BotState, orderNumber?: string): string {
   const lines = state.items.map(
-    (item) => `â€¢ ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
+    (item) => `• ${qtyLabel(item.qty, item.unit)} ${item.name} — ${brl(item.total)}`,
   );
   const payment =
-        ? "Cartão na entrega (motoboy leva maquininha)"
+    state.payment === "pix"
       ? "Pix"
       : state.payment === "card"
         ? "Cartão na entrega (motoboy leva maquininha)"
         : "Dinheiro";
-      ? `\n  💵 Troco de ${brl(state.change ?? Math.round((state.cashFor - totalOf(state)) * 100) / 100)} para ${brl(state.cashFor)}`
+
   const trocoText =
-        ? "\n  💵 Pagamento exato (sem troco)"
-      ? `\n  ðŸ’µ Troco de ${brl(state.change ?? Math.round((state.cashFor - totalOf(state)) * 100) / 100)} para ${brl(state.cashFor)}`
+    state.payment === "cash" && state.cashFor && state.cashFor > totalOf(state)
+      ? `\r\n  💵 Troco de ${brl(state.change ?? Math.round((state.cashFor - totalOf(state)) * 100) / 100)} para ${brl(state.cashFor)}`
       : state.payment === "cash"
-        ? "\n  ðŸ’µ Pagamento exato (sem troco)"
+        ? "\r\n  💵 Pagamento exato (sem troco)"
         : "";
-    orderNumber ? `🎉 *Pedido #${orderNumber} confirmado com sucesso!*` : "📋 *Resumo do Pedido*",
+
   return [
-    orderNumber ? `ðŸŽ‰ *Pedido ${orderNumber} confirmado com sucesso!*` : "ðŸ“‹ *Resumo do Pedido*",
+    orderNumber ? `🎉 *Pedido #${orderNumber} confirmado com sucesso!*` : "📋 *Resumo do Pedido*",
     "",
     ...lines,
     "",
     `Subtotal: ${brl(subtotalOf(state))}`,
     `Taxa de entrega: ${brl(DELIVERY_FEE)}`,
     `*Total: ${brl(totalOf(state))}*`,
-    `📍 *Endereço:* ${state.address.street}`, 
+    `Forma de pagamento: ${payment}${trocoText}`,
+    "",
+    `📍 *Endereço:* ${state.address.street}`,
     `👤 *Recebe:* ${state.address.receiver}`,
-    `ðŸ“ *EndereÃ§o:* ${state.address.street}`,
-    `ðŸ‘¤ *Recebe:* ${state.address.receiver}`,
   ].join("\n");
 }
 
