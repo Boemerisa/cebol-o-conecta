@@ -136,8 +136,8 @@ function alternatives(products: Product[], missing: string[]): string {
     .filter((line): line is string => line != null);
 
   return suggestions.length
-    ? `SugestÃµes disponÃ­veis hoje:\n${suggestions.join("\n")}`
-    : "No momento nÃ£o temos substitutos diretos nessa categoria.";
+    ? `Sugestões disponíveis hoje:\n${suggestions.join("\n")}`
+    : "No momento não temos substitutos diretos nessa categoria.";
 }
 
 /** Motor da conversa: processa texto ou clique de botÃ£o e devolve as respostas do bot */
@@ -266,7 +266,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       if (unknown.length > 0) {
         const missingName = unknown[0];
         replies.push({
-          text: `NÃ£o temos '${missingName}' no momento ðŸ˜•. Quer continuar o pedido sem esse item ou gostaria de adicionar outro no lugar?`,
+          text: `Não temos '${missingName}' no momento 😕. Quer continuar o pedido sem esse item ou gostaria de adicionar outro no lugar?`,
           buttons: [`Continuar sem ${missingName}`, "Adicionar outro item"],
         });
         return {
@@ -421,7 +421,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         const extraReplies: BotReply[] = [];
         if (additions.unknown.length > 0) {
           extraReplies.push({
-            text: `Aviso: nÃ£o temos '${additions.unknown[0]}' no momento ðŸ˜•.`,
+            text: `Aviso: não temos '${additions.unknown[0]}' no momento 😕.`,
           });
         }
         extraReplies.push({
