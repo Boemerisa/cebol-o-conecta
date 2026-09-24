@@ -177,11 +177,16 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
     replies,
   });
 
-  // Comando de reinÃ­cio / voltar ao menu principal (universal)
+  // Comandos universais de navegação (funcionam em qualquer momento)
   if (
     n === "reiniciar" ||
     n === "voltar" ||
     n === "voltar ao menu" ||
+    n === "voltar ao inicio" ||
+    n === "voltar ao início" ||
+    n === "inicio" ||
+    n === "início" ||
+    n === "menu" ||
     n === "menu principal" ||
     n === "reiniciar conversa" ||
     n === "novo teste" ||
@@ -190,7 +195,48 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
   ) {
     return {
       state: initialBotState(),
-      replies: [{ text: WELCOME_TEXT, buttons: WELCOME_BUTTONS }],
+      replies: [{ text: "Voltamos ao início! Como posso te ajudar hoje? 😊", buttons: WELCOME_BUTTONS }],
+    };
+  }
+
+  // Se clicar ou digitar "Falar com atendente" em qualquer etapa
+  if (
+    n === "falar com atendente" ||
+    n === "atendente" ||
+    n === "falar com humano" ||
+    n === "atendente humano"
+  ) {
+    return {
+      state: { ...initialBotState(), step: "human" },
+      replies: [
+        {
+          text: "Tudo bem! O responsável irá atendê-lo em instantes. 😊",
+              buttons: ["Fazer um pedido", "Voltar ao início"],
+          buttons: ["Fazer um pedido", "Voltar ao início"],
+        },
+      ],
+      action: "human",
+    };
+  }
+
+  // Se clicar ou digitar "Fazer pedido" em qualquer etapa
+  if (
+    n === "fazer um pedido" ||
+    n === "fazer pedido" ||
+    n === "quero fazer um pedido" ||
+    n === "novo pedido"
+  ) {
+    return {
+      state: { ...initialBotState(), step: "items" },
+      replies: [
+        {
+          text: "Que ótimo! 😀 Me mande a sua lista de compras em uma mensagem só.
+
+Por exemplo: *1kg de tomate, 500g de cebola, 2 pés de alface e 1 óleo Liza*",
+              buttons: ["Voltar ao início"],
+          buttons: ["Voltar ao início"],
+        },
+      ],
     };
   }
 
