@@ -57,10 +57,11 @@ In local grocery stores and produce retail, WhatsApp serves as the primary sales
                                         ▼
           ┌─────────────────────────────────────────────────────────┐
           │               MERCHANT OPERATIONS BOARD                 │
-          │   - Kanban Workflow Engine (New Order ➔ Fulfilled)      │
+          │   - Kanban Workflow Engine (New Order ➔ Fulfilled)     │
           │   - Thermal Receipt Printing (58mm / 80mm CSS)          │
           │   - Multi-frequency Web Audio Alerts                    │
           └─────────────────────────────────────────────────────────┘
+```
 
 ## ✨ Engineering Highlights & Core Features
 
@@ -77,6 +78,29 @@ In local grocery stores and produce retail, WhatsApp serves as the primary sales
 ### 3. Dynamic Catalog Manager (`src/routes/catalogo.tsx`)
 - Inline price editing with currency input masking and decimal normalization.
 - Instant stock availability toggle (`Available` / `Out of Stock`) reflected immediately across bot conversational responses.
+
+---
+
+## 🛠 Tech Stack & Architecture Decisions
+
+| Layer | Technology | Architectural Rationale |
+|---|---|---|
+| **Language** | **TypeScript 5.x** | Strict schema validation across orders, addresses, and transaction payloads. |
+| **Frontend** | **React 18 + TanStack Router** | Type-safe file-based routing with automatic route splitting and zero runtime route errors. |
+| **State & Cache** | **TanStack Query (React Query)** | Optimistic UI mutations, stale-while-revalidate caching, and background sync. |
+| **Database & Auth** | **Supabase / PostgreSQL** | Relational persistence, Row-Level Security (RLS) policies, and high-performance REST endpoints. |
+| **Styling** | **Tailwind CSS + Radix UI** | Accessible headless primitives (WAI-ARIA compliant) via shadcn/ui with a mobile-first layout. |
+| **Deployment** | **Vercel** | Automated CI/CD pipeline triggered on `main` branch with global Edge Caching. |
+
+---
+
+## 🧪 Resiliency & Production-Ready Engineering
+
+1. **UTF-8 Encoding Sanitization:** Robust character encoding safeguards for conversational messages, preventing payload corruption across different operating systems and legacy terminals.
+2. **Defensive Persistence Layer:** Granular fallback strategies (`try/catch`) when inserting line items (`order_items`), guaranteeing that isolated child table errors never abort the primary order entry (`orders`).
+3. **Point-of-Sale Usability:** Ergonomic inputs equipped with `inputMode="decimal"` and oversized interactive targets (`h-12`) tailored for fast-paced mobile and tablet usage behind checkout counters.
+
+---
 
 ## 👤 Author
 
