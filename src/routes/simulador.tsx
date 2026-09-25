@@ -192,7 +192,49 @@ function SimuladorPage() {
 
     setDraft("");
 
-    // Se a conversa estiver finalizada/inativa e o cliente mandar texto livre (e nao clicar em um botao inicial), reiniciar com boas-vindas
+    // 1. Se cliente clicar em "Voltar ao início" ou digitar comandos de retorno
+    const isBackCommand = ["voltar", "menu", "inicio", "início", "voltar ao início", "voltar ao inicio"].includes(clean.toLowerCase());
+    if (isBackCommand) {
+      setIsWithHuman(false);
+      setHasStarted(false);
+      setState(initialBotState());
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), from: "client", text: clean, time: now() },
+      ]);
+      setTyping(true);
+      window.setTimeout(() => {
+        setTyping(false);
+        pushBotReplies([
+          {
+            text: WELCOME_TEXT,
+            buttons: WELCOME_BUTTONS,
+          },
+        ]);
+      }, 400);
+      return;
+    }
+
+    // 2. Se cliente clicar ou digitar "Finalizar"
+    if (clean.toLowerCase() === "finalizar") {
+      setIsWithHuman(false);
+      setHasStarted(false);
+      setState(initialBotState());
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), from: "client", text: clean, time: now() },
+      ]);
+      setTyping(true);
+      window.setTimeout(() => {
+        setTyping(false);
+        pushBotReplies([
+          { text: "Ficamos muito felizes em te atender! Agradecemos a preferência e volte sempre! 😊👋" },
+        ]);
+      }, 400);
+      return;
+    }
+
+    // 3. Se a conversa estiver inativa e o cliente mandar texto livre (que não seja botão inicial)
     const isInitialButton = WELCOME_BUTTONS.some((btn) => btn.toLowerCase() === clean.toLowerCase());
     if (!hasStarted && !isInitialButton) {
       setHasStarted(true);
@@ -211,31 +253,24 @@ function SimuladorPage() {
             buttons: WELCOME_BUTTONS,
           },
         ]);
-      }, 500);
+      }, 400);
       return;
     }
 
     setHasStarted(true);
     setLastActivity(Date.now());
 
-    // Se o cliente clicar ou digitar "Finalizar"
-    if (clean.toLowerCase() === "finalizar") {
-      setIsWithHuman(false);
-      setHasStarted(false);
-      setState(initialBotState());
+    // 4. Se estiver em atendimento com humano: registra a mensagem do cliente e permanece em silêncio
+    if (isWithHuman) {
       setMessages((prev) => [
         ...prev,
         { id: nextId(), from: "client", text: clean, time: now() },
       ]);
-      setTyping(true);
-      window.setTimeout(() => {
-        setTyping(false);
-        pushBotReplies([{ text: "Ficamos muito felizes em te atender! Agradecemos a preferência e volte sempre! 😊👋" }]);
-      }, 500);
+      // Não dispara resposta automática nem botões repetitivos. A conversa flui normalmente.
       return;
     }
 
-    // Adiciona bal�o do cliente
+    // 5. Fluxo normal do Bot automatizado
     setMessages((prev) => [
       ...prev,
       { id: nextId(), from: "client", text: clean, time: now() },
@@ -243,40 +278,18 @@ function SimuladorPage() {
 
     setTyping(true);
 
-    // Processa pelo motor conversacional
     const result = advance(state, clean, products);
     setState(result.state);
 
     window.setTimeout(() => {
       setTyping(false);
+      pushBotReplies(result.replies);
 
-      if (result.action === "human") {
-        pushBotReplies([
-          ...result.replies,
-          {
-            text: "Um atendente responderá em breve. Caso deseje encerrar, basta clicar no botão abaixo.",
-            buttons: ["Finalizar"],
-          },
-        ]);
-        supportMutation.mutate(clean);
-      } else {
-        pushBotReplies(result.replies);
+      // Se o usuário acionou a transferência para atendente humano
+      if (result.state.step === "HUMAN_AGENT") {
+        setIsWithHuman(true);
       }
-
-      if (result.action === "create_order") {
-        orderMutation.mutate(result.state);
-      }
-    }, 600);
-  }
-
-  function handleRestart() {
-    setIsWithHuman(false);
-    setHasStarted(false);
-    setState(initialBotState());
-    setMessages([welcomeMessage()]);
-    setDraft("");
-    setTyping(false);
-    toast.info("Conversa reiniciada. O bot enviou a sauda��o inicial.");
+    }, 500);
   }
 
   return (
