@@ -292,6 +292,24 @@ function SimuladorPage() {
     }, 500);
   }
 
+  
+  function handleRestart() {
+    setIsWithHuman(false);
+    setHasStarted(false);
+    setState(initialBotState());
+    setDraft("");
+    setTyping(false);
+    setMessages([
+      {
+        id: "msg_init_welcome",
+        from: "bot",
+        text: WELCOME_TEXT,
+        buttons: WELCOME_BUTTONS,
+        time: now(),
+      },
+    ]);
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col items-center pb-24">
       {/* Barra de controle superior */}
