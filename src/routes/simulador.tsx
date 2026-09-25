@@ -38,7 +38,7 @@ import {
 export const Route = createFileRoute("/simulador")({
   head: () => ({
     meta: [
-      { title: "Simulador WhatsApp | Cebol�o Emp�rio e Verdur�o" },
+      { title: "Simulador WhatsApp | Cebolão Empório e Verdurão" },
       {
         name: "description",
         content:
@@ -192,8 +192,9 @@ function SimuladorPage() {
 
     setDraft("");
 
-    // Se o cliente enviar mensagem apos a conversa estar finalizada/inativa, reiniciar com boas-vindas
-    if (!hasStarted) {
+    // Se a conversa estiver finalizada/inativa e o cliente mandar texto livre (e nao clicar em um botao inicial), reiniciar com boas-vindas
+    const isInitialButton = WELCOME_BUTTONS.some((btn) => btn.toLowerCase() === clean.toLowerCase());
+    if (!hasStarted && !isInitialButton) {
       setHasStarted(true);
       setLastActivity(Date.now());
       setState(initialBotState());
@@ -324,7 +325,7 @@ function SimuladorPage() {
 
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-base font-bold leading-tight">
-                Cebol�o Emp�rio e Verdur�o
+                Cebolão Empório e Verdurão
               </h2>
               <p className="text-xs text-emerald-100">
                 {isWithHuman ? "atendimento humano" : "online"}
