@@ -154,8 +154,8 @@ function SimuladorPage() {
       void queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
       pushBotReplies([
         {
-          text: `${summaryText(finishedState, orderNumber)}\n\n?? *Seu pedido j� caiu na tela de separa��o da loja!* Avisaremos quando sair para entrega.`,
-          buttons: ["Finalizar"],
+          text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido já caiu na tela de separação da loja!* Avisaremos quando sair para entrega.`,
+          buttons: ["Finalizar", "Voltar ao início"],
         },
       ]);
       toast.success(`Pedido ${orderNumber} gravado com sucesso no Supabase!`, {
@@ -283,9 +283,15 @@ function SimuladorPage() {
 
     window.setTimeout(() => {
       setTyping(false);
+
+      if (result.action === "create_order") {
+        // Dispara a mutação para gravar o pedido no Supabase e exibir o recibo final
+        createOrderMutation.mutate(result.state);
+        return;
+      }
+
       pushBotReplies(result.replies);
 
-      // Se o usuário acionou a transferência para atendente humano
       if (result.state.step === "HUMAN_AGENT") {
         setIsWithHuman(true);
       }
