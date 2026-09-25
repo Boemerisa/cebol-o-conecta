@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -58,6 +58,7 @@ interface ChatMessage {
 }
 
 const CLIENT_PHONE = "(62) 99988-7766";
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
 
 const now = () =>
   new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -86,17 +87,46 @@ function SimuladorPage() {
   const [state, setState] = useState<BotState>(initialBotState);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
+  const [isWithHuman, setIsWithHuman] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, typing]);
 
+  // Timeout global de 30 minutos por inatividade em qualquer etapa da conversa
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    const timer = setTimeout(() => {
+      setIsWithHuman(false);
+      setHasStarted(false);
+      setState(initialBotState());
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: nextId(),
+          from: "bot",
+          text: "Devido ao tempo de inatividade de 30 minutos, o atendimento foi encerrado automaticamente. Quando precisar de algo, basta enviar uma nova mensagem por aqui! 😊👋",
+          buttons: WELCOME_BUTTONS,
+          time: now(),
+        },
+      ]);
+      toast.info("Atendimento encerrado por inatividade de 30 minutos.");
+    }, INACTIVITY_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [hasStarted, lastActivity]);
+
   const supportMutation = useMutation({
     mutationFn: (clientMessage: string) =>
       createSupportRequest(CLIENT_PHONE, clientMessage),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SUPPORT_KEY });
+      setIsWithHuman(true);
+      setLastActivity(Date.now());
       toast.info("Aviso enviado ao painel da loja: cliente na lista 'Conversas Pendentes'.", {
         duration: 4000,
       });
@@ -123,14 +153,10 @@ function SimuladorPage() {
       }),
     onSuccess: (orderNumber, finishedState) => {
       void queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
-      // Adiciona o resumo final e confirmação na tela do WhatsApp
       pushBotReplies([
         {
-          text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido já caiu na tela de separação da loja!* Avisaremos quando sair para entrega. Muito obrigado pela preferência! 🧅💚`,
-        },
-        {
-          text: "Ajudo em algo mais?",
-          buttons: WELCOME_BUTTONS,
+          text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido já caiu na tela de separação da loja!* Avisaremos quando sair para entrega.`,
+          buttons: ["Finalizar"],
         },
       ]);
       toast.success(`Pedido ${orderNumber} gravado com sucesso no Supabase!`, {
@@ -142,6 +168,7 @@ function SimuladorPage() {
       pushBotReplies([
         {
           text: `Ops! Ocorreu um problema ao registrar seu pedido: ${err.message}. A dona da loja já foi avisada.`,
+          buttons: ["Finalizar"],
         },
       ]);
     },
@@ -165,6 +192,31 @@ function SimuladorPage() {
     if (!clean || typing) return;
 
     setDraft("");
+    setHasStarted(true);
+    setLastActivity(Date.now());
+
+    // Se o cliente clicar ou digitar "Finalizar"
+    if (clean.toLowerCase() === "finalizar") {
+      setIsWithHuman(false);
+      setHasStarted(false);
+      setState(initialBotState());
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), from: "client", text: clean, time: now() },
+      ]);
+      setTyping(true);
+      window.setTimeout(() => {
+        setTyping(false);
+        pushBotReplies([
+          {
+            text: "Ficamos muito felizes em te atender! Agradecemos a preferência e volte sempre! 😊👋",
+            buttons: WELCOME_BUTTONS,
+          },
+        ]);
+      }, 500);
+      return;
+    }
+
     // Adiciona balão do cliente
     setMessages((prev) => [
       ...prev,
@@ -179,11 +231,20 @@ function SimuladorPage() {
 
     window.setTimeout(() => {
       setTyping(false);
-      pushBotReplies(result.replies);
 
       if (result.action === "human") {
+        pushBotReplies([
+          ...result.replies,
+          {
+            text: "Um atendente responderá em breve. Caso deseje encerrar, basta clicar no botão abaixo.",
+            buttons: ["Finalizar"],
+          },
+        ]);
         supportMutation.mutate(clean);
+      } else {
+        pushBotReplies(result.replies);
       }
+
       if (result.action === "create_order") {
         orderMutation.mutate(result.state);
       }
@@ -191,6 +252,8 @@ function SimuladorPage() {
   }
 
   function handleRestart() {
+    setIsWithHuman(false);
+    setHasStarted(false);
     setState(initialBotState());
     setMessages([welcomeMessage()]);
     setDraft("");
@@ -221,14 +284,12 @@ function SimuladorPage() {
 
       {/* Frame do Smartphone com interface WhatsApp */}
       <div className="w-full overflow-hidden rounded-[2.5rem] border-[8px] border-neutral-800 bg-neutral-900 shadow-2xl">
-        {/* Entalhe / Speakerphone do smartphone */}
         <div className="relative flex h-6 w-full items-center justify-center bg-neutral-800">
           <div className="h-3.5 w-24 rounded-full bg-neutral-900" />
         </div>
 
         {/* WhatsApp App Container */}
         <div className="flex h-[680px] flex-col bg-[#efeae2]">
-          {/* Cabeçalho Oficial do WhatsApp */}
           <header className="flex items-center gap-2 bg-[#008069] px-3 py-2.5 text-white shadow-md">
             <button
               type="button"
@@ -239,21 +300,20 @@ function SimuladorPage() {
               <ArrowLeft className="size-5" />
             </button>
 
-            {/* Foto de Perfil */}
             <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-2xl shadow-inner">
               🧅
               <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-[#008069] bg-green-400" />
             </div>
 
-            {/* Nome e Status */}
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-base font-bold leading-tight">
                 Cebolão Empório e Verdurão
               </h2>
-              <p className="text-xs text-emerald-100">online</p>
+              <p className="text-xs text-emerald-100">
+                {isWithHuman ? "atendimento humano" : "online"}
+              </p>
             </div>
 
-            {/* Ícones de ação do WhatsApp */}
             <div className="flex items-center gap-3 text-emerald-100">
               <button
                 type="button"
@@ -279,7 +339,6 @@ function SimuladorPage() {
             </div>
           </header>
 
-          {/* Área do Chat com Papel de Parede do WhatsApp */}
           <div
             className="flex-1 space-y-3 overflow-y-auto p-3"
             style={{
@@ -287,12 +346,10 @@ function SimuladorPage() {
               backgroundSize: "20px 20px",
             }}
           >
-            {/* Aviso de Criptografia do WhatsApp */}
             <div className="mx-auto my-1 max-w-[85%] rounded-lg bg-[#ffeecd] px-3 py-1.5 text-center text-[11px] leading-tight text-[#54656f] shadow-sm">
               🔒 As mensagens são protegidas com criptografia de ponta a ponta.
             </div>
 
-            {/* Lista de Mensagens */}
             {messages.map((message) => {
               const isBot = message.from === "bot";
               return (
@@ -313,7 +370,6 @@ function SimuladorPage() {
                     </div>
                   </div>
 
-                  {/* Botões interativos do WhatsApp (Estilo WhatsApp Business) */}
                   {message.buttons && message.buttons.length > 0 ? (
                     <div className="mr-auto grid w-full max-w-[84%] gap-1.5 pt-0.5">
                       {message.buttons.map((btnLabel) => (
@@ -332,7 +388,6 @@ function SimuladorPage() {
               );
             })}
 
-            {/* Indicador de Digitação */}
             {typing ? (
               <div className="mr-auto flex max-w-[84%] items-center gap-1.5 rounded-xl rounded-tl-none bg-white px-3 py-2 text-xs text-[#667781] shadow-sm">
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600" />
@@ -345,7 +400,6 @@ function SimuladorPage() {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Barra de Entrada de Mensagem do WhatsApp */}
           <footer className="flex items-center gap-2 bg-[#f0f2f5] px-2 py-2">
             <div className="flex flex-1 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
               <button
