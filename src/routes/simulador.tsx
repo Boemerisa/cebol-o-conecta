@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -38,11 +38,11 @@ import {
 export const Route = createFileRoute("/simulador")({
   head: () => ({
     meta: [
-      { title: "Simulador WhatsApp | Cebolão Empório e Verdurão" },
+      { title: "Simulador WhatsApp | Cebol�o Emp�rio e Verdur�o" },
       {
         name: "description",
         content:
-          "Teste o assistente oficial de pedidos do WhatsApp do Cebolão com layout idêntico ao celular.",
+          "Teste o assistente oficial de pedidos do WhatsApp do Cebol�o com layout id�ntico ao celular.",
       },
     ],
   }),
@@ -109,8 +109,7 @@ function SimuladorPage() {
         {
           id: nextId(),
           from: "bot",
-          text: "Devido ao tempo de inatividade de 30 minutos, o atendimento foi encerrado automaticamente. Quando precisar de algo, basta enviar uma nova mensagem por aqui! 😊👋",
-          buttons: WELCOME_BUTTONS,
+          text: "Devido ao tempo de inatividade de 30 minutos, o atendimento foi encerrado automaticamente. Quando precisar de algo, basta enviar uma nova mensagem por aqui! ????",
           time: now(),
         },
       ]);
@@ -155,7 +154,7 @@ function SimuladorPage() {
       void queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
       pushBotReplies([
         {
-          text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido já caiu na tela de separação da loja!* Avisaremos quando sair para entrega.`,
+          text: `${summaryText(finishedState, orderNumber)}\n\n?? *Seu pedido j� caiu na tela de separa��o da loja!* Avisaremos quando sair para entrega.`,
           buttons: ["Finalizar"],
         },
       ]);
@@ -167,7 +166,7 @@ function SimuladorPage() {
       toast.error(`Erro ao salvar pedido: ${err.message}`);
       pushBotReplies([
         {
-          text: `Ops! Ocorreu um problema ao registrar seu pedido: ${err.message}. A dona da loja já foi avisada.`,
+          text: `Ops! Ocorreu um problema ao registrar seu pedido: ${err.message}. A dona da loja j� foi avisada.`,
           buttons: ["Finalizar"],
         },
       ]);
@@ -207,17 +206,12 @@ function SimuladorPage() {
       setTyping(true);
       window.setTimeout(() => {
         setTyping(false);
-        pushBotReplies([
-          {
-            text: "Ficamos muito felizes em te atender! Agradecemos a preferência e volte sempre! 😊👋",
-            buttons: WELCOME_BUTTONS,
-          },
-        ]);
+        pushBotReplies([{ text: "Ficamos muito felizes em te atender! Agradecemos a prefer�ncia e volte sempre! ????" }]);
       }, 500);
       return;
     }
 
-    // Adiciona balão do cliente
+    // Adiciona bal�o do cliente
     setMessages((prev) => [
       ...prev,
       { id: nextId(), from: "client", text: clean, time: now() },
@@ -236,7 +230,7 @@ function SimuladorPage() {
         pushBotReplies([
           ...result.replies,
           {
-            text: "Um atendente responderá em breve. Caso deseje encerrar, basta clicar no botão abaixo.",
+            text: "Um atendente responder� em breve. Caso deseje encerrar, basta clicar no bot�o abaixo.",
             buttons: ["Finalizar"],
           },
         ]);
@@ -258,7 +252,7 @@ function SimuladorPage() {
     setMessages([welcomeMessage()]);
     setDraft("");
     setTyping(false);
-    toast.info("Conversa reiniciada. O bot enviou a saudação inicial.");
+    toast.info("Conversa reiniciada. O bot enviou a sauda��o inicial.");
   }
 
   return (
@@ -301,13 +295,13 @@ function SimuladorPage() {
             </button>
 
             <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-2xl shadow-inner">
-              🧅
+              ??
               <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-[#008069] bg-green-400" />
             </div>
 
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-base font-bold leading-tight">
-                Cebolão Empório e Verdurão
+                Cebol�o Emp�rio e Verdur�o
               </h2>
               <p className="text-xs text-emerald-100">
                 {isWithHuman ? "atendimento humano" : "online"}
@@ -318,21 +312,21 @@ function SimuladorPage() {
               <button
                 type="button"
                 className="hover:text-white"
-                onClick={() => toast.info("Ligação por voz não disponível no simulador.")}
+                onClick={() => toast.info("Liga��o por voz n�o dispon�vel no simulador.")}
               >
                 <Video className="size-5" />
               </button>
               <button
                 type="button"
                 className="hover:text-white"
-                onClick={() => toast.info("Ligação de áudio não disponível no simulador.")}
+                onClick={() => toast.info("Liga��o de �udio n�o dispon�vel no simulador.")}
               >
                 <Phone className="size-4" />
               </button>
               <button
                 type="button"
                 className="hover:text-white"
-                onClick={() => toast.info("Opções do WhatsApp")}
+                onClick={() => toast.info("Op��es do WhatsApp")}
               >
                 <MoreVertical className="size-5" />
               </button>
@@ -347,7 +341,7 @@ function SimuladorPage() {
             }}
           >
             <div className="mx-auto my-1 max-w-[85%] rounded-lg bg-[#ffeecd] px-3 py-1.5 text-center text-[11px] leading-tight text-[#54656f] shadow-sm">
-              🔒 As mensagens são protegidas com criptografia de ponta a ponta.
+              ?? As mensagens s�o protegidas com criptografia de ponta a ponta.
             </div>
 
             {messages.map((message) => {
@@ -393,7 +387,7 @@ function SimuladorPage() {
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600" />
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600 [animation-delay:0.2s]" />
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600 [animation-delay:0.4s]" />
-                <span className="ml-1 italic">digitando…</span>
+                <span className="ml-1 italic">digitando�</span>
               </div>
             ) : null}
 
@@ -405,7 +399,7 @@ function SimuladorPage() {
               <button
                 type="button"
                 className="text-[#54656f] hover:text-[#111b21]"
-                onClick={() => setDraft((prev) => prev + " 😊")}
+                onClick={() => setDraft((prev) => prev + " ??")}
               >
                 <Smile className="size-5" />
               </button>
@@ -425,7 +419,7 @@ function SimuladorPage() {
               <button
                 type="button"
                 className="text-[#54656f] hover:text-[#111b21]"
-                onClick={() => toast.info("Envio de mídia simulado.")}
+                onClick={() => toast.info("Envio de m�dia simulado.")}
               >
                 <Paperclip className="size-5 rotate-45" />
               </button>

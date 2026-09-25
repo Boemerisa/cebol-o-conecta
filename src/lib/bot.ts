@@ -211,8 +211,6 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       replies: [
         {
           text: "Tudo bem! O responsável irá atendê-lo em instantes. Deixe aqui a sua mensagem 😊",
-          buttons: ["Voltar ao início"],
-          buttons: ["Voltar ao início"],
         },
       ],
       action: "human",
@@ -231,7 +229,6 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       replies: [
         {
           text: "Que ótimo! 😀 Me mande a sua lista de compras em uma mensagem só.\n\nPor exemplo: *1kg de tomate, 500g de cebola, 2 pés de alface e 1 óleo Liza*",
-          buttons: ["Voltar ao início"],
         },
       ],
     };
