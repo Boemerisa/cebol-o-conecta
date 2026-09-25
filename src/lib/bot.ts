@@ -653,7 +653,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
             },
             {
               text: summaryText(nextState),
-              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
+              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Voltar ao início"],
             },
           ],
         };
@@ -672,11 +672,11 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           state: nextState,
           replies: [
             {
-              text: "Combinado! Vamos avisar o motoboy para levar a maquininha ðŸ’³",
+              text: "Combinado! Vamos avisar o motoboy para levar a maquininha 💳",
             },
             {
               text: summaryText(nextState),
-              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
+              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Voltar ao início"],
             },
           ],
         };
@@ -726,7 +726,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
             },
             {
               text: summaryText(nextState),
-              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
+              buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Voltar ao início"],
             },
           ],
         };
@@ -767,7 +767,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
           },
           {
             text: summaryText(nextState),
-            buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
+            buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Voltar ao início"],
           },
         ],
       };
@@ -805,7 +805,19 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
         };
       }
 
-      if (n.includes("voltar") || n.includes("corrigir") || n.includes("cancelar")) {
+      if (n.includes("voltar") || n.includes("inicio") || n.includes("início") || n.includes("cancelar")) {
+        return {
+          state: initialBotState(),
+          replies: [
+            {
+              text: WELCOME_TEXT,
+              buttons: WELCOME_BUTTONS,
+            },
+          ],
+        };
+      }
+
+      if (n.includes("corrigir")) {
         return {
           state: { ...state, step: "review" },
           replies: [
@@ -820,7 +832,7 @@ export function advance(state: BotState, input: string, products: Product[]): Bo
       return keep([
         {
           text: "Podemos enviar esse pedido para a loja?",
-          buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Alterar pedido"],
+          buttons: ["Confirmar pedido", "Alterar forma de pagamento", "Voltar ao início"],
         },
       ]);
     }

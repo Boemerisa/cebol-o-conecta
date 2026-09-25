@@ -154,7 +154,7 @@ function SimuladorPage() {
       void queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
       pushBotReplies([
         {
-          text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido já caiu na tela de separação da loja!* Avisaremos quando sair para entrega.`,
+          text: `${summaryText(finishedState, orderNumber)}\n\n🛵 *Seu pedido foi confirmado e logo será preparado!* Avisaremos quando sair para entrega.`,
           buttons: ["Finalizar", "Voltar ao início"],
         },
       ]);
@@ -167,7 +167,7 @@ function SimuladorPage() {
       pushBotReplies([
         {
           text: `Ops! Ocorreu um problema ao registrar seu pedido: ${err.message}. A dona da loja j� foi avisada.`,
-          buttons: ["Finalizar"],
+          buttons: ["Finalizar", "Voltar ao início"],
         },
       ]);
     },
