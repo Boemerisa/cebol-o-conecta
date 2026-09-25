@@ -11,17 +11,5 @@ export default defineConfig({
       serverDir: ".vercel/output/functions/__server.func",
       publicDir: ".vercel/output/static",
     },
-    externals: {
-      inline: [
-        "tslib",
-        "@supabase/supabase-js",
-        "@supabase/functions-js",
-        "@supabase/postgrest-js",
-        "@supabase/realtime-js",
-        "@supabase/storage-js",
-        "@supabase/auth-js",
-      ],
-      trace: false,
-    },
   },
 });
