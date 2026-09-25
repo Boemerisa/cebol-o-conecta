@@ -286,7 +286,7 @@ function SimuladorPage() {
 
       if (result.action === "create_order") {
         // Dispara a mutação para gravar o pedido no Supabase e exibir o recibo final
-        createOrderMutation.mutate(result.state);
+        orderMutation.mutate(result.state);
         return;
       }
 
