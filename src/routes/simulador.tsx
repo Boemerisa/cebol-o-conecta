@@ -109,7 +109,7 @@ function SimuladorPage() {
         {
           id: nextId(),
           from: "bot",
-          text: "Devido ao tempo de inatividade de 30 minutos, o atendimento foi encerrado automaticamente. Quando precisar de algo, basta enviar uma nova mensagem por aqui! ????",
+          text: "Devido ao tempo de inatividade de 30 minutos, o atendimento foi encerrado automaticamente. Quando precisar de algo, basta enviar uma nova mensagem por aqui! 😊👋",
           time: now(),
         },
       ]);
@@ -191,6 +191,29 @@ function SimuladorPage() {
     if (!clean || typing) return;
 
     setDraft("");
+
+    // Se o cliente enviar mensagem apos a conversa estar finalizada/inativa, reiniciar com boas-vindas
+    if (!hasStarted) {
+      setHasStarted(true);
+      setLastActivity(Date.now());
+      setState(initialBotState());
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), from: "client", text: clean, time: now() },
+      ]);
+      setTyping(true);
+      window.setTimeout(() => {
+        setTyping(false);
+        pushBotReplies([
+          {
+            text: WELCOME_TEXT,
+            buttons: WELCOME_BUTTONS,
+          },
+        ]);
+      }, 500);
+      return;
+    }
+
     setHasStarted(true);
     setLastActivity(Date.now());
 
@@ -206,7 +229,7 @@ function SimuladorPage() {
       setTyping(true);
       window.setTimeout(() => {
         setTyping(false);
-        pushBotReplies([{ text: "Ficamos muito felizes em te atender! Agradecemos a prefer�ncia e volte sempre! ????" }]);
+        pushBotReplies([{ text: "Ficamos muito felizes em te atender! Agradecemos a preferência e volte sempre! 😊👋" }]);
       }, 500);
       return;
     }
@@ -230,7 +253,7 @@ function SimuladorPage() {
         pushBotReplies([
           ...result.replies,
           {
-            text: "Um atendente responder� em breve. Caso deseje encerrar, basta clicar no bot�o abaixo.",
+            text: "Um atendente responderá em breve. Caso deseje encerrar, basta clicar no botão abaixo.",
             buttons: ["Finalizar"],
           },
         ]);
@@ -341,7 +364,7 @@ function SimuladorPage() {
             }}
           >
             <div className="mx-auto my-1 max-w-[85%] rounded-lg bg-[#ffeecd] px-3 py-1.5 text-center text-[11px] leading-tight text-[#54656f] shadow-sm">
-              ?? As mensagens s�o protegidas com criptografia de ponta a ponta.
+          🔒 As mensagens são protegidas com criptografia de ponta a ponta.
             </div>
 
             {messages.map((message) => {
@@ -387,7 +410,7 @@ function SimuladorPage() {
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600" />
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600 [animation-delay:0.2s]" />
                 <span className="size-2 animate-bounce rounded-full bg-emerald-600 [animation-delay:0.4s]" />
-                <span className="ml-1 italic">digitando�</span>
+                <span className="ml-1 italic">digitando…</span>
               </div>
             ) : null}
 
@@ -419,7 +442,7 @@ function SimuladorPage() {
               <button
                 type="button"
                 className="text-[#54656f] hover:text-[#111b21]"
-                onClick={() => toast.info("Envio de m�dia simulado.")}
+                onClick={() => toast.info("Envio de mídia simulado.")}
               >
                 <Paperclip className="size-5 rotate-45" />
               </button>
